@@ -35,8 +35,14 @@ class RenderSystem extends System {
         // Render background
         this.renderBackground(ctx);
         
+        // Render placement grid
+        this.renderPlacementGrid(ctx);
+        
         // Render game entities
         this.renderEntities(ctx);
+        
+        // Render attack ranges
+        this.renderAttackRanges(ctx);
         
         // Render UI elements
         this.renderUI(ctx);
@@ -53,6 +59,57 @@ class RenderSystem extends System {
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         }
+    }
+
+    renderPlacementGrid(ctx) {
+        // Get grid size from placement system if available
+        const gridSize = 32; // Default grid size
+        const canvasWidth = ctx.canvas.width;
+        const canvasHeight = ctx.canvas.height;
+        
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        
+        // Draw vertical lines
+        for (let x = 0; x <= canvasWidth; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvasHeight);
+            ctx.stroke();
+        }
+        
+        // Draw horizontal lines
+        for (let y = 0; y <= canvasHeight; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvasWidth, y);
+            ctx.stroke();
+        }
+        
+        ctx.restore();
+    }
+
+    renderAttackRanges(ctx) {
+        // Render attack ranges for monsters when hovering or placing
+        this.entities.forEach(entity => {
+            if (entity.hasTag('monster')) {
+                const monsterComp = entity.getComponent('MonsterComponent');
+                const posComp = entity.getComponent('PositionComponent');
+                
+                if (monsterComp && posComp) {
+                    // Show range circle for monsters
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.arc(posComp.x, posComp.y, monsterComp.stats.range, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        });
     }
 
     renderEntities(ctx) {
@@ -115,9 +172,9 @@ class RenderSystem extends System {
         
         if (healthComp && maxHealth > 0) {
             const healthPercentage = currentHealth / maxHealth;
-            const barWidth = 30;
-            const barHeight = 4;
-            const barY = pos.y - 25;
+            const barWidth = 40;
+            const barHeight = 6;
+            const barY = pos.y - 30;
             
             // Background
             ctx.save();
@@ -131,8 +188,17 @@ class RenderSystem extends System {
             
             // Border
             ctx.strokeStyle = '#000';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 2;
             ctx.strokeRect(pos.x - barWidth / 2, barY, barWidth, barHeight);
+            
+            // Show level for monsters
+            if (entity.hasTag('monster') && healthComp.level) {
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Lv.${healthComp.level}`, pos.x, barY - 5);
+            }
+            
             ctx.restore();
         }
     }

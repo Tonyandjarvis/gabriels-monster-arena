@@ -15,8 +15,12 @@ class AudioSystem extends System {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.createSounds();
+            console.log('Audio system initialized successfully');
         } catch (error) {
             console.warn('Audio not supported:', error);
+            this.audioContext = null;
+            this.soundEnabled = false;
+            this.musicEnabled = false;
         }
     }
 
@@ -79,13 +83,20 @@ class AudioSystem extends System {
     }
 
     playSound(soundName) {
+        if (!this.soundEnabled || !this.audioContext) {
+            return; // Gracefully handle audio not available
+        }
+        
         const sound = this.sounds.get(soundName);
         if (sound) {
             try {
                 sound();
             } catch (error) {
                 console.warn('Failed to play sound:', soundName, error);
+                // Don't throw, just log and continue
             }
+        } else {
+            console.warn('Sound not found:', soundName);
         }
     }
 

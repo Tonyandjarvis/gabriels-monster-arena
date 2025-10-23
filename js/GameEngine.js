@@ -41,22 +41,65 @@ class GameEngine {
     }
 
     initialize() {
-        this.canvas = document.getElementById('gameCanvas');
-        this.ctx = this.canvas.getContext('2d');
-        
-        if (!this.canvas || !this.ctx) {
-            throw new Error('Failed to get canvas or context');
+        try {
+            this.canvas = document.getElementById('gameCanvas');
+            if (!this.canvas) {
+                throw new Error('Canvas element not found');
+            }
+            
+            this.ctx = this.canvas.getContext('2d');
+            if (!this.ctx) {
+                throw new Error('Failed to get canvas context');
+            }
+            
+            this.setupCanvas();
+            this.setupSystems();
+            this.setupEventListeners();
+            this.setupGame();
+            
+            this.performanceMonitor.enable();
+            this.isRunning = true;
+            
+            console.log('Game Engine initialized successfully');
+        } catch (error) {
+            console.error('Game Engine initialization failed:', error);
+            this.handleInitializationError(error);
+            throw error;
         }
-        
-        this.setupCanvas();
-        this.setupSystems();
-        this.setupEventListeners();
-        this.setupGame();
-        
-        this.performanceMonitor.enable();
-        this.isRunning = true;
-        
-        console.log('Game Engine initialized successfully');
+    }
+
+    handleInitializationError(error) {
+        // Show user-friendly error message
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ff4444;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            z-index: 10000;
+            max-width: 400px;
+        `;
+        errorDiv.innerHTML = `
+            <h2>Game Loading Error</h2>
+            <p>Failed to initialize Gabriel's Monster Arena.</p>
+            <p>Please refresh the page to try again.</p>
+            <button onclick="location.reload()" style="
+                background: white;
+                color: #ff4444;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-top: 10px;
+            ">Refresh Page</button>
+        `;
+        document.body.appendChild(errorDiv);
     }
 
     setupCanvas() {
@@ -96,6 +139,7 @@ class GameEngine {
         this.waveSystem = new WaveSystem();
         this.renderSystem = new RenderSystem();
         this.uiSystem = new UISystem(this.canvas);
+        this.uiSystem.gameEngine = this; // Set reference to game engine
         this.audioSystem = new AudioSystem();
         this.particleSystem = new ParticleSystem();
         this.tutorialSystem = new TutorialSystem();
@@ -288,25 +332,55 @@ class GameEngine {
     update(deltaTime) {
         if (!this.isRunning) return;
         
-        // Update performance monitor
-        this.performanceMonitor.update(performance.now());
-        this.performanceMonitor.updateEntityStats(this.entities);
-        
-        // Update systems
-        this.systems.forEach(system => {
-            if (system.enabled) {
-                system.update(deltaTime);
-            }
-        });
-        
-        // Update entities
-        this.updateEntities(deltaTime);
-        
-        // Process combat events
-        this.processCombatEvents();
-        
-        // Check game state
-        this.checkGameState();
+        try {
+            // Cap deltaTime to prevent spiral of death
+            const maxDeltaTime = 100; // 10 FPS minimum
+            deltaTime = Math.min(deltaTime, maxDeltaTime);
+            
+            // Update performance monitor
+            this.performanceMonitor.update(performance.now());
+            this.performanceMonitor.updateEntityStats(this.entities);
+            
+            // Update systems with error handling
+            this.systems.forEach(system => {
+                if (system.enabled) {
+                    try {
+                        system.update(deltaTime);
+                    } catch (error) {
+                        console.error(`Error updating system ${system.constructor.name}:`, error);
+                        // Disable problematic system but continue game
+                        system.enabled = false;
+                    }
+                }
+            });
+            
+            // Update entities
+            this.updateEntities(deltaTime);
+            
+            // Process combat events
+            this.processCombatEvents();
+            
+            // Check game state
+            this.checkGameState();
+        } catch (error) {
+            console.error('Critical error in game update loop:', error);
+            // Try to recover by pausing the game
+            this.pauseGame();
+            this.showError('Game encountered an error and has been paused. Please refresh to continue.');
+        }
+    }
+
+    showError(message) {
+        console.error(message);
+        // Could show error overlay to user
+        if (this.ctx) {
+            this.ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = '20px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('Game Error - Please Refresh', this.canvas.width / 2, this.canvas.height / 2);
+        }
     }
 
     updateEntities(deltaTime) {
@@ -489,14 +563,26 @@ class GameEngine {
             return;
         }
         
+        // Calculate deltaTime and cap it
         this.deltaTime = currentTime - this.lastTime;
         this.lastTime = currentTime;
         
-        // Update game
-        this.update(this.deltaTime);
+        // Frame rate stabilization
+        this.frameCount++;
+        if (currentTime - this.lastFPSUpdate >= 1000) {
+            this.fps = this.frameCount;
+            this.frameCount = 0;
+            this.lastFPSUpdate = currentTime;
+        }
         
-        // Render game
-        this.render();
+        // Only update if enough time has passed (target 60 FPS)
+        if (this.deltaTime >= this.frameTime) {
+            // Update game
+            this.update(this.deltaTime);
+            
+            // Render game
+            this.render();
+        }
         
         // Continue loop
         requestAnimationFrame((time) => this.gameLoop(time));
@@ -506,6 +592,11 @@ class GameEngine {
         this.gameState = 'GAMEPLAY';
         this.isRunning = true;
         this.lastTime = performance.now();
+        this.frameCount = 0;
+        this.fps = 0;
+        this.targetFPS = 60;
+        this.frameTime = 1000 / this.targetFPS;
+        this.lastFPSUpdate = this.lastTime;
         this.gameLoop(this.lastTime);
     }
 

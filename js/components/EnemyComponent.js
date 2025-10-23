@@ -82,7 +82,8 @@ EnemyComponent.TYPES = {
             armor: 0
         },
         color: '#ff6b6b',
-        description: 'Basic enemy with moderate health and speed'
+        description: 'Basic enemy with moderate health and speed',
+        shape: 'rectangle'
     },
     FAST: {
         name: 'Imp',
@@ -94,7 +95,8 @@ EnemyComponent.TYPES = {
             armor: 0
         },
         color: '#4ecdc4',
-        description: 'Fast but fragile enemy'
+        description: 'Fast but fragile enemy',
+        shape: 'circle'
     },
     TANK: {
         name: 'Ogre',
@@ -106,7 +108,8 @@ EnemyComponent.TYPES = {
             armor: 5
         },
         color: '#45b7d1',
-        description: 'Slow but heavily armored enemy'
+        description: 'Slow but heavily armored enemy',
+        shape: 'rectangle'
     },
     FLYING: {
         name: 'Bat',
@@ -118,6 +121,7 @@ EnemyComponent.TYPES = {
             armor: 0
         },
         color: '#96ceb4',
-        description: 'Flying enemy that can bypass some defenses'
+        description: 'Flying enemy that can bypass some defenses',
+        shape: 'triangle'
     }
 };

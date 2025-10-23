@@ -130,7 +130,8 @@ MonsterComponent.TYPES = {
             upgradeCost: 100
         },
         color: '#9c27b0',
-        description: 'A mystical crystal guardian with powerful ranged attacks'
+        description: 'A mystical crystal guardian with powerful ranged attacks',
+        shape: 'diamond'
     },
     BLOB: {
         name: 'Slime Defender',
@@ -143,7 +144,8 @@ MonsterComponent.TYPES = {
             upgradeCost: 60
         },
         color: '#4caf50',
-        description: 'A resilient slime creature with good health and moderate damage'
+        description: 'A resilient slime creature with good health and moderate damage',
+        shape: 'circle'
     },
     ANIMAL: {
         name: 'Beast Warrior',
@@ -156,6 +158,7 @@ MonsterComponent.TYPES = {
             upgradeCost: 140
         },
         color: '#ff9800',
-        description: 'A fierce beast with high damage but lower health'
+        description: 'A fierce beast with high damage but lower health',
+        shape: 'triangle'
     }
 };

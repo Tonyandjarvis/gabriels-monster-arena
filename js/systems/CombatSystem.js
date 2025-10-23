@@ -218,6 +218,15 @@ class CombatSystem extends System {
                 died: died
             });
             
+            // If enemy died, add death event
+            if (died) {
+                this.combatEvents.push({
+                    type: 'enemy_died',
+                    enemy: target,
+                    reward: enemyComp.getReward()
+                });
+            }
+            
             // Give experience to the monster that fired the projectile
             if (died && projectileComp.sourceMonster) {
                 const monsterComp = projectileComp.sourceMonster.getComponent('MonsterComponent');

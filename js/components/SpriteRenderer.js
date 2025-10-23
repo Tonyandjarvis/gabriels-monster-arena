@@ -40,32 +40,75 @@ class SpriteRenderer extends Component {
         ctx.save();
         ctx.globalAlpha = this.alpha;
         
-        if (this.sprite) {
-            if (this.animation && this.animation.frames && this.animation.frames.length > 0) {
-                const frame = this.animation.frames[this.currentFrame];
-                ctx.drawImage(
-                    this.sprite,
-                    frame.x, frame.y, frame.width, frame.height,
-                    position.x - this.width / 2, position.y - this.height / 2,
-                    this.width, this.height
-                );
+        try {
+            if (this.sprite && this.sprite.complete && this.sprite.naturalWidth > 0) {
+                if (this.animation && this.animation.frames && this.animation.frames.length > 0) {
+                    const frame = this.animation.frames[this.currentFrame];
+                    ctx.drawImage(
+                        this.sprite,
+                        frame.x, frame.y, frame.width, frame.height,
+                        position.x - this.width / 2, position.y - this.height / 2,
+                        this.width, this.height
+                    );
+                } else {
+                    ctx.drawImage(
+                        this.sprite,
+                        position.x - this.width / 2, position.y - this.height / 2,
+                        this.width, this.height
+                    );
+                }
             } else {
-                ctx.drawImage(
-                    this.sprite,
-                    position.x - this.width / 2, position.y - this.height / 2,
-                    this.width, this.height
-                );
+                // Enhanced fallback rendering
+                this.renderFallbackShape(ctx, position);
             }
-        } else {
-            // Fallback to colored rectangle
-            ctx.fillStyle = this.color;
-            ctx.fillRect(
-                position.x - this.width / 2, position.y - this.height / 2,
-                this.width, this.height
-            );
+        } catch (error) {
+            console.warn('Sprite rendering error:', error);
+            this.renderFallbackShape(ctx, position);
         }
         
         ctx.restore();
+    }
+
+    renderFallbackShape(ctx, position) {
+        // Enhanced fallback with different shapes based on color
+        ctx.fillStyle = this.color;
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        
+        const x = position.x - this.width / 2;
+        const y = position.y - this.height / 2;
+        const centerX = position.x;
+        const centerY = position.y;
+        
+        // Choose shape based on color for visual variety
+        if (this.color.includes('purple') || this.color.includes('#9c27b0')) {
+            // Crystal Guardian - diamond shape
+            ctx.beginPath();
+            ctx.moveTo(centerX, y);
+            ctx.lineTo(centerX + this.width / 2, centerY);
+            ctx.lineTo(centerX, y + this.height);
+            ctx.lineTo(centerX - this.width / 2, centerY);
+            ctx.closePath();
+        } else if (this.color.includes('green') || this.color.includes('#4caf50')) {
+            // Slime Defender - circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, Math.min(this.width, this.height) / 2, 0, Math.PI * 2);
+        } else if (this.color.includes('orange') || this.color.includes('#ff9800')) {
+            // Beast Warrior - triangle
+            ctx.beginPath();
+            ctx.moveTo(centerX, y);
+            ctx.lineTo(x, y + this.height);
+            ctx.lineTo(x + this.width, y + this.height);
+            ctx.closePath();
+        } else {
+            // Default - rectangle
+            ctx.fillRect(x, y, this.width, this.height);
+            ctx.strokeRect(x, y, this.width, this.height);
+            return;
+        }
+        
+        ctx.fill();
+        ctx.stroke();
     }
 
     createSimpleSprite(ctx, color = null) {
