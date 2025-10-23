@@ -157,6 +157,9 @@ class GameEngine {
         
         // Setup system relationships
         this.setupSystemRelationships();
+        
+        // Set cross-system references
+        this.renderSystem.pathfindingSystem = this.pathfindingSystem;
     }
 
     setupSystemRelationships() {
@@ -164,6 +167,8 @@ class GameEngine {
         const start = { x: 50, y: 200 };
         const end = { x: this.canvas.width - 50, y: 400 };
         this.pathfindingSystem.generatePath(start, end);
+        
+        console.log(`Generated path with ${this.pathfindingSystem.path.length} points from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
         
         // Set path for placement system
         this.placementSystem.setPath(this.pathfindingSystem.getPath());

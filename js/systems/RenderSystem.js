@@ -38,6 +38,11 @@ class RenderSystem extends System {
         // Render placement grid
         this.renderPlacementGrid(ctx);
         
+        // Render path (if pathfinding system exists)
+        if (this.pathfindingSystem) {
+            this.pathfindingSystem.render(ctx);
+        }
+        
         // Render game entities
         this.renderEntities(ctx);
         
