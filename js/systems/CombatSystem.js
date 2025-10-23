@@ -56,6 +56,13 @@ class CombatSystem extends System {
         
         // Process combat events
         this.processCombatEvents();
+        
+        // Debug logging
+        const monsterCount = Array.from(this.entities).filter(e => e.hasTag('monster')).length;
+        const enemyCount = Array.from(this.entities).filter(e => e.hasTag('enemy')).length;
+        if (monsterCount > 0 || enemyCount > 0) {
+            console.log(`CombatSystem: ${monsterCount} monsters, ${enemyCount} enemies, ${this.projectiles.length} projectiles`);
+        }
     }
 
     updateMonsters(deltaTime) {

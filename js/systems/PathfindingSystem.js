@@ -17,11 +17,17 @@ class PathfindingSystem extends System {
 
     update(deltaTime) {
         // Update enemy movement along path
+        let enemyCount = 0;
         this.entities.forEach(entity => {
             if (entity.hasTag('enemy')) {
                 this.updateEntity(entity, deltaTime);
+                enemyCount++;
             }
         });
+        
+        if (enemyCount > 0) {
+            console.log(`PathfindingSystem updating ${enemyCount} enemies`);
+        }
     }
 
     createSimplePath(start, end) {

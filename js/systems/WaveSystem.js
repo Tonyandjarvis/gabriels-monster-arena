@@ -121,11 +121,22 @@ class WaveSystem extends System {
         }
 
         const wave = this.waves[this.currentWave - 1]; // Fix array access
-        const spawnInterval = 1000; // Simple fixed interval for testing
+        const spawnInterval = 2000; // 2 second intervals
         
         if (this.spawnTimer >= spawnInterval) {
-            this.spawnNextEnemy();
-            this.spawnTimer = 0;
+            // Spawn next enemy in sequence - simplified logic
+            const enemyGroup = wave.enemies[0]; // Start with first enemy type
+            if (enemyGroup && this.getSpawnedCount(enemyGroup.type) < enemyGroup.count) {
+                this.spawnEnemy(enemyGroup.type);
+                this.spawnTimer = 0;
+            } else if (wave.enemies.length > 1) {
+                // Try second enemy type if first is done
+                const secondEnemyGroup = wave.enemies[1];
+                if (secondEnemyGroup && this.getSpawnedCount(secondEnemyGroup.type) < secondEnemyGroup.count) {
+                    this.spawnEnemy(secondEnemyGroup.type);
+                    this.spawnTimer = 0;
+                }
+            }
         }
     }
 
