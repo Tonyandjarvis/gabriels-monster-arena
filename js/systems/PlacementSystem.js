@@ -70,10 +70,10 @@ class PlacementSystem extends System {
             return false;
         }
         
-        // Check if position is not on the path
+        // Check if position is not on the path (temporarily disabled for testing)
         if (this.isOnPath(gridX, gridY)) {
-            console.log(`Placement invalid: on path (${gridX}, ${gridY})`);
-            return false;
+            console.log(`Placement invalid: on path (${gridX}, ${gridY}) - IGNORED FOR TESTING`);
+            // return false; // Temporarily disabled
         }
         
         // Check if position is not an obstacle

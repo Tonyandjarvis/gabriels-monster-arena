@@ -302,9 +302,10 @@ class GameEngine {
             if (this.uiSystem.canAffordMonster(monsterType)) {
                 const monster = this.placementSystem.placeMonster(x, y, monsterType);
                 if (monster) {
-                    console.log('Monster placed successfully!');
+                    console.log('Monster placed successfully!', monster);
                     this.uiSystem.spendCurrency(cost);
                     this.entities.set(monster.id, monster);
+                    console.log('Monster added to entities, total entities:', this.entities.size);
                     this.audioSystem.playSound('monster_place');
                     this.placementSystem.exitPlacementMode();
                     this.uiSystem.exitPlacementMode();
