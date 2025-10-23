@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabriel's Monster Arena - Basic Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        #testCanvas {
+            border: 2px solid #333;
+            background: #fff;
+            display: block;
+            margin: 20px auto;
+        }
+        .test-info {
+            background: #e8f4f8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .test-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #45a049;
+        }
+        .error {
+            background: #ffebee;
+            border-left-color: #f44336;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Gabriel's Monster Arena - Basic Functionality Test</h1>
+    
+    <div class="test-info">
+        <h3>Test Purpose</h3>
+        <p>This page tests the basic functionality of the game engine to identify where the issues are.</p>
+    </div>
+    
+    <div id="testResults"></div>
+    
+    <canvas id="testCanvas" width="800" height="600"></canvas>
+    
+    <div style="text-align: center; margin: 20px;">
+        <button class="test-button" onclick="testCanvas()">Test Canvas</button>
+        <button class="test-button" onclick="testEntityCreation()">Test Entity Creation</button>
+        <button class="test-button" onclick="testGameEngine()">Test Game Engine</button>
+        <button class="test-button" onclick="runAllTests()">Run All Tests</button>
+    </div>
+    
+    <div id="consoleOutput" style="background: #000; color: #0f0; padding: 10px; margin: 20px 0; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></div>
+
+    <!-- Load all the game files -->
+    <script src="js/engine/Entity.js"></script>
+    <script src="js/engine/Component.js"></script>
+    <script src="js/engine/System.js"></script>
+    <script src="js/components/PositionComponent.js"></script>
+    <script src="js/components/SpriteRenderer.js"></script>
+    <script src="js/components/MonsterComponent.js"></script>
+    <script src="js/systems/RenderSystem.js"></script>
+    <script src="js/GameEngine.js"></script>
+
+    <script>
+        let testResults = [];
+        let consoleOutput = document.getElementById('consoleOutput');
+        let testCanvas = document.getElementById('testCanvas');
+        let ctx = testCanvas.getContext('2d');
+
+        // Override console.log to capture output
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            consoleOutput.textContent += args.join(' ') + '\n';
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            consoleOutput.textContent += 'ERROR: ' + args.join(' ') + '\n';
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+
+        function addTestResult(testName, success, message) {
+            testResults.push({ name: testName, success, message });
+            updateTestResults();
+        }
+
+        function updateTestResults() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '';
+            
+            testResults.forEach(result => {
+                const div = document.createElement('div');
+                div.className = `test-info ${result.success ? 'success' : 'error'}`;
+                div.innerHTML = `
+                    <strong>${result.success ? '✅' : '❌'} ${result.name}</strong><br>
+                    ${result.message}
+                `;
+                resultsDiv.appendChild(div);
+            });
+        }
+
+        function testCanvas() {
+            try {
+                console.log('Testing canvas functionality...');
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, testCanvas.width, testCanvas.height);
+                
+                // Draw a test rectangle
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(100, 100, 50, 50);
+                
+                // Draw a test circle
+                ctx.fillStyle = '#00ff00';
+                ctx.beginPath();
+                ctx.arc(200, 150, 25, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                addTestResult('Canvas Test', true, 'Canvas drawing works correctly');
+            } catch (error) {
+                addTestResult('Canvas Test', false, `Canvas test failed: ${error.message}`);
+            }
+        }
+
+        function testEntityCreation() {
+            try {
+                console.log('Testing entity creation...');
+                
+                // Test Entity class
+                if (typeof Entity === 'undefined') {
+                    throw new Error('Entity class not loaded');
+                }
+                
+                const entity = new Entity();
+                console.log('Entity created:', entity);
+                
+                // Test PositionComponent
+                if (typeof PositionComponent === 'undefined') {
+                    throw new Error('PositionComponent class not loaded');
+                }
+                
+                const posComp = new PositionComponent(100, 100);
+                entity.addComponent(posComp);
+                console.log('PositionComponent added:', posComp);
+                
+                // Test SpriteRenderer
+                if (typeof SpriteRenderer === 'undefined') {
+                    throw new Error('SpriteRenderer class not loaded');
+                }
+                
+                const spriteComp = new SpriteRenderer(32, 32, '#ff0000');
+                entity.addComponent(spriteComp);
+                console.log('SpriteRenderer added:', spriteComp);
+                
+                // Test rendering the entity
+                const pos = entity.getComponent('PositionComponent');
+                const sprite = entity.getComponent('SpriteRenderer');
+                
+                if (pos && sprite) {
+                    sprite.render(ctx, pos);
+                    console.log('Entity rendered successfully');
+                }
+                
+                addTestResult('Entity Creation', true, 'Entity creation and rendering works');
+            } catch (error) {
+                addTestResult('Entity Creation', false, `Entity creation failed: ${error.message}`);
+            }
+        }
+
+        function testGameEngine() {
+            try {
+                console.log('Testing game engine initialization...');
+                
+                if (typeof GameEngine === 'undefined') {
+                    throw new Error('GameEngine class not loaded');
+                }
+                
+                const engine = new GameEngine();
+                console.log('GameEngine created:', engine);
+                
+                // Test initialization
+                engine.initialize();
+                console.log('GameEngine initialized successfully');
+                
+                addTestResult('Game Engine', true, 'Game engine initialization works');
+            } catch (error) {
+                addTestResult('Game Engine', false, `Game engine test failed: ${error.message}`);
+            }
+        }
+
+        function runAllTests() {
+            console.log('Running all tests...');
+            testResults = [];
+            
+            testCanvas();
+            testEntityCreation();
+            testGameEngine();
+            
+            console.log('All tests completed');
+        }
+
+        // Run basic tests when page loads
+        window.addEventListener('load', function() {
+            console.log('Basic functionality test page loaded');
+            console.log('Click the test buttons to run individual tests or "Run All Tests" to test everything');
+        });
+    </script>
+</body>
+</html>
