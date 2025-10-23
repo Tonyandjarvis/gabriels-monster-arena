@@ -201,8 +201,23 @@ class GameEngine {
         // Update UI with current stats
         this.uiSystem.updateGameStats(this.gameStats);
         
+        // Add a test monster for debugging
+        this.addTestMonster();
+        
         // Start first wave
         this.startWave();
+    }
+
+    addTestMonster() {
+        // Add a test monster to verify rendering works
+        const testMonster = new Entity();
+        testMonster.addComponent(new PositionComponent(100, 100));
+        testMonster.addComponent(new MonsterComponent('GEM', MonsterComponent.TYPES.GEM.stats));
+        testMonster.addComponent(new SpriteRenderer(32, 32, '#9c27b0'));
+        testMonster.addTag('monster');
+        
+        this.entities.set(testMonster.id, testMonster);
+        console.log('Test monster added at (100, 100), total entities:', this.entities.size);
     }
 
     startWave() {
