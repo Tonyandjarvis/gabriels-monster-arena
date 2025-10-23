@@ -15,6 +15,15 @@ class PathfindingSystem extends System {
         this.waypoints = this.createWaypoints(this.path);
     }
 
+    update(deltaTime) {
+        // Update enemy movement along path
+        this.entities.forEach(entity => {
+            if (entity.hasTag('enemy')) {
+                this.updateEntity(entity, deltaTime);
+            }
+        });
+    }
+
     createSimplePath(start, end) {
         const path = [];
         const steps = 20;

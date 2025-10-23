@@ -71,6 +71,8 @@ class WaveSystem extends System {
     }
 
     startWave() {
+        console.log(`Starting wave ${this.currentWave + 1} of ${this.waves.length}`);
+        
         if (this.currentWave >= this.waves.length) {
             // All waves completed
             this.combatEvents.push({
@@ -93,12 +95,15 @@ class WaveSystem extends System {
             this.enemiesInWave += enemyGroup.count;
         });
 
+        console.log(`Wave ${this.currentWave + 1} started with ${this.enemiesInWave} enemies`);
+
         this.combatEvents.push({
             type: 'wave_started',
             wave: this.currentWave + 1,
             description: wave.description
         });
 
+        this.currentWave++; // Increment wave counter
         return true;
     }
 
@@ -115,18 +120,10 @@ class WaveSystem extends System {
             return;
         }
 
-        const wave = this.waves[this.currentWave];
-        let nextSpawnTime = Infinity;
-
-        wave.enemies.forEach(enemyGroup => {
-            const spawnedCount = this.getSpawnedCount(enemyGroup.type);
-            if (spawnedCount < enemyGroup.count) {
-                const nextSpawn = this.getNextSpawnTime(enemyGroup.type, enemyGroup.spawnDelay);
-                nextSpawnTime = Math.min(nextSpawnTime, nextSpawn);
-            }
-        });
-
-        if (this.spawnTimer >= nextSpawnTime) {
+        const wave = this.waves[this.currentWave - 1]; // Fix array access
+        const spawnInterval = 1000; // Simple fixed interval for testing
+        
+        if (this.spawnTimer >= spawnInterval) {
             this.spawnNextEnemy();
             this.spawnTimer = 0;
         }
@@ -151,7 +148,7 @@ class WaveSystem extends System {
     }
 
     spawnNextEnemy() {
-        const wave = this.waves[this.currentWave];
+        const wave = this.waves[this.currentWave - 1]; // Fix array access
         let soonestEnemy = null;
         let soonestTime = Infinity;
 
@@ -190,6 +187,8 @@ class WaveSystem extends System {
         this.enemiesSpawned++;
         this.enemiesAlive++;
 
+        console.log(`Spawned ${enemyType} enemy (${this.enemiesSpawned}/${this.enemiesInWave}) at (${this.spawnPosition.x}, ${this.spawnPosition.y})`);
+
         this.combatEvents.push({
             type: 'enemy_spawned',
             enemy: entity,
@@ -209,7 +208,7 @@ class WaveSystem extends System {
     completeWave() {
         this.waveActive = false;
         this.waveComplete = true;
-        this.currentWave++;
+        // Don't increment currentWave here - it's already incremented in startWave()
 
         this.combatEvents.push({
             type: 'wave_completed',
