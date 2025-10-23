@@ -318,4 +318,10 @@ class CombatSystem extends System {
             projectilePoolSize: this.projectilePool.getPooledCount()
         };
     }
+
+    getCombatEvents() {
+        const events = [...this.combatEvents];
+        this.combatEvents.length = 0;
+        return events;
+    }
 }

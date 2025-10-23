@@ -124,17 +124,13 @@ class WaveSystem extends System {
         const spawnInterval = 2000; // 2 second intervals
         
         if (this.spawnTimer >= spawnInterval) {
-            // Spawn next enemy in sequence - simplified logic
-            const enemyGroup = wave.enemies[0]; // Start with first enemy type
-            if (enemyGroup && this.getSpawnedCount(enemyGroup.type) < enemyGroup.count) {
-                this.spawnEnemy(enemyGroup.type);
-                this.spawnTimer = 0;
-            } else if (wave.enemies.length > 1) {
-                // Try second enemy type if first is done
-                const secondEnemyGroup = wave.enemies[1];
-                if (secondEnemyGroup && this.getSpawnedCount(secondEnemyGroup.type) < secondEnemyGroup.count) {
-                    this.spawnEnemy(secondEnemyGroup.type);
+            // Spawn next enemy in sequence - iterate through ALL enemy types
+            for (let i = 0; i < wave.enemies.length; i++) {
+                const enemyGroup = wave.enemies[i];
+                if (enemyGroup && this.getSpawnedCount(enemyGroup.type) < enemyGroup.count) {
+                    this.spawnEnemy(enemyGroup.type);
                     this.spawnTimer = 0;
+                    break; // Spawn one enemy at a time
                 }
             }
         }

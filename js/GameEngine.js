@@ -209,8 +209,7 @@ class GameEngine {
         // Add a test monster for debugging
         this.addTestMonster();
         
-        // Start first wave
-        this.startWave();
+        // Don't auto-start wave - let user click START button
     }
 
     addTestMonster() {
@@ -463,6 +462,7 @@ class GameEngine {
                 this.entities.set(entity.id, entity);
                 this.renderSystem.addEntity(entity);
                 this.combatSystem.addEntity(entity);
+                this.pathfindingSystem.addEntity(entity);
                 console.log('Synced new enemy entity:', entity.id);
             }
         });
@@ -496,9 +496,14 @@ class GameEngine {
     }
 
     processCombatEvents() {
-        const events = this.waveSystem.getCombatEvents();
+        // Process events from all systems with combat events
+        const waveEvents = this.waveSystem.getCombatEvents();
+        const pathfindingEvents = this.pathfindingSystem.getCombatEvents();
+        const combatEvents = this.combatSystem.getCombatEvents();
         
-        events.forEach(event => {
+        const allEvents = [...waveEvents, ...pathfindingEvents, ...combatEvents];
+        
+        allEvents.forEach(event => {
             switch (event.type) {
                 case 'enemy_died':
                     this.handleEnemyDeath(event);

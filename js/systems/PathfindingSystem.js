@@ -6,6 +6,7 @@ class PathfindingSystem extends System {
         this.pathWidth = 40;
         this.pathColor = '#8B4513';
         this.pathBorderColor = '#654321';
+        this.combatEvents = [];
     }
 
     generatePath(start, end, obstacles = []) {
@@ -258,5 +259,11 @@ class PathfindingSystem extends System {
         );
         
         return distance <= tolerance;
+    }
+
+    getCombatEvents() {
+        const events = [...this.combatEvents];
+        this.combatEvents.length = 0;
+        return events;
     }
 }

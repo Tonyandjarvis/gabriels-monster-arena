@@ -53,6 +53,10 @@ class TutorialSystem extends System {
         console.log('Tutorial started:', this.steps[this.currentStep].title);
     }
 
+    isActive() {
+        return this.tutorialActive;
+    }
+
     completeAction(actionType) {
         if (!this.tutorialActive) return;
         
