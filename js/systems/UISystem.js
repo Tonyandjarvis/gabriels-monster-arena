@@ -44,6 +44,30 @@ class UISystem extends System {
             
             this.buttons.push(button);
         });
+        
+        // Add upgrade button
+        const upgradeButton = new UpgradeButton(
+            this.canvas.width - 100, this.canvas.height - 100,
+            80, 80,
+            () => this.enterUpgradeMode()
+        );
+        this.buttons.push(upgradeButton);
+        
+        // Add tutorial button
+        const tutorialButton = new TutorialButton(
+            this.canvas.width - 100, this.canvas.height - 200,
+            80, 80,
+            () => this.startTutorial()
+        );
+        this.buttons.push(tutorialButton);
+        
+        // Add start wave button
+        const startWaveButton = new StartWaveButton(
+            this.canvas.width - 100, this.canvas.height - 300,
+            80, 80,
+            () => this.startWave()
+        );
+        this.buttons.push(startWaveButton);
     }
 
     createGameHUD() {
@@ -99,6 +123,11 @@ class UISystem extends System {
         this.buttons.forEach(button => {
             button.selected = button.monsterType === monsterType;
         });
+        
+        // Notify tutorial system
+        if (this.gameEngine && this.gameEngine.tutorialSystem) {
+            this.gameEngine.tutorialSystem.completeAction('click_monster');
+        }
     }
 
     exitPlacementMode() {
@@ -109,6 +138,51 @@ class UISystem extends System {
         this.buttons.forEach(button => {
             button.selected = false;
         });
+    }
+
+    enterUpgradeMode() {
+        this.upgradeMode = true;
+        this.selectedMonster = null;
+        
+        // Update button states
+        this.buttons.forEach(button => {
+            if (button instanceof MonsterButton) {
+                button.selected = false;
+            }
+        });
+    }
+
+    exitUpgradeMode() {
+        this.upgradeMode = false;
+    }
+
+    upgradeMonster(monster) {
+        const monsterComp = monster.getComponent('MonsterComponent');
+        if (monsterComp && this.canAffordUpgrade(monsterComp)) {
+            const cost = monsterComp.getUpgradeCost();
+            if (this.spendCurrency(cost)) {
+                monsterComp.upgrade();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    canAffordUpgrade(monsterComp) {
+        return this.gameStats.currency >= monsterComp.getUpgradeCost();
+    }
+
+    startTutorial() {
+        if (this.gameEngine && this.gameEngine.tutorialSystem) {
+            this.gameEngine.tutorialSystem.startTutorial();
+        }
+    }
+
+    startWave() {
+        if (this.gameEngine && this.gameEngine.waveSystem) {
+            this.gameEngine.waveSystem.startWave();
+            this.gameEngine.tutorialSystem.completeAction('start_wave');
+        }
     }
 
     update(deltaTime) {
@@ -128,6 +202,11 @@ class UISystem extends System {
         // Render placement mode indicator
         if (this.placementMode) {
             this.renderPlacementModeIndicator(ctx);
+        }
+        
+        // Render upgrade mode indicator
+        if (this.upgradeMode) {
+            this.renderUpgradeModeIndicator(ctx);
         }
     }
 
@@ -210,6 +289,28 @@ class UISystem extends System {
         ctx.font = '16px Arial';
         ctx.fillText(
             `Cost: ${MonsterComponent.TYPES[this.selectedMonster].stats.cost}`,
+            this.canvas.width / 2, this.canvas.height / 2 + 30
+        );
+        
+        ctx.restore();
+    }
+
+    renderUpgradeModeIndicator(ctx) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(
+            'Click on a monster to upgrade it',
+            this.canvas.width / 2, this.canvas.height / 2
+        );
+        
+        ctx.font = '16px Arial';
+        ctx.fillText(
+            'Upgrades increase damage, health, and range',
             this.canvas.width / 2, this.canvas.height / 2 + 30
         );
         
@@ -322,6 +423,165 @@ class MonsterButton {
         // Cost
         ctx.font = '10px Arial';
         ctx.fillText(`$${this.monsterData.stats.cost}`, this.x + this.width / 2, this.y + this.height - 20);
+        
+        ctx.restore();
+    }
+}
+
+class UpgradeButton {
+    constructor(x, y, width, height, onClick) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.onClick = onClick;
+        this.selected = false;
+        this.pressed = false;
+    }
+
+    isPointInside(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    update(deltaTime) {
+        // Update button animations if needed
+    }
+
+    render(ctx) {
+        ctx.save();
+        
+        // Button background
+        if (this.selected) {
+            ctx.fillStyle = '#FF9800';
+        } else if (this.pressed) {
+            ctx.fillStyle = '#F57C00';
+        } else {
+            ctx.fillStyle = '#FFC107';
+        }
+        
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Button border
+        ctx.strokeStyle = this.selected ? '#fff' : '#000';
+        ctx.lineWidth = this.selected ? 3 : 2;
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        
+        // Upgrade icon (arrow up)
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('⬆', this.x + this.width / 2, this.y + this.height / 2 + 8);
+        
+        // Upgrade text
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText('UPGRADE', this.x + this.width / 2, this.y + this.height - 5);
+        
+        ctx.restore();
+    }
+}
+
+class TutorialButton {
+    constructor(x, y, width, height, onClick) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.onClick = onClick;
+        this.selected = false;
+        this.pressed = false;
+    }
+
+    isPointInside(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    update(deltaTime) {
+        // Update button animations if needed
+    }
+
+    render(ctx) {
+        ctx.save();
+        
+        // Button background
+        if (this.selected) {
+            ctx.fillStyle = '#3498db';
+        } else if (this.pressed) {
+            ctx.fillStyle = '#2980b9';
+        } else {
+            ctx.fillStyle = '#3498db';
+        }
+        
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Button border
+        ctx.strokeStyle = this.selected ? '#fff' : '#000';
+        ctx.lineWidth = this.selected ? 3 : 2;
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        
+        // Tutorial icon (question mark)
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('?', this.x + this.width / 2, this.y + this.height / 2 + 8);
+        
+        // Tutorial text
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText('TUTORIAL', this.x + this.width / 2, this.y + this.height - 5);
+        
+        ctx.restore();
+    }
+}
+
+class StartWaveButton {
+    constructor(x, y, width, height, onClick) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.onClick = onClick;
+        this.selected = false;
+        this.pressed = false;
+    }
+
+    isPointInside(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    update(deltaTime) {
+        // Update button animations if needed
+    }
+
+    render(ctx) {
+        ctx.save();
+        
+        // Button background
+        if (this.selected) {
+            ctx.fillStyle = '#e74c3c';
+        } else if (this.pressed) {
+            ctx.fillStyle = '#c0392b';
+        } else {
+            ctx.fillStyle = '#e74c3c';
+        }
+        
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Button border
+        ctx.strokeStyle = this.selected ? '#fff' : '#000';
+        ctx.lineWidth = this.selected ? 3 : 2;
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        
+        // Start wave icon (play button)
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('▶', this.x + this.width / 2, this.y + this.height / 2 + 8);
+        
+        // Start wave text
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText('START', this.x + this.width / 2, this.y + this.height - 5);
         
         ctx.restore();
     }

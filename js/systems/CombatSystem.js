@@ -131,6 +131,7 @@ class CombatSystem extends System {
         
         projectilePos.setPosition(pos.x, pos.y);
         projectileComp.initialize(damage, 300, monsterComp.target);
+        projectileComp.sourceMonster = monster; // Track which monster fired this projectile
         
         this.projectiles.push(projectile);
         
@@ -216,6 +217,23 @@ class CombatSystem extends System {
                 damage: damage,
                 died: died
             });
+            
+            // Give experience to the monster that fired the projectile
+            if (died && projectileComp.sourceMonster) {
+                const monsterComp = projectileComp.sourceMonster.getComponent('MonsterComponent');
+                if (monsterComp) {
+                    const expGained = enemyComp.getReward() / 2; // Half the reward as experience
+                    const leveledUp = monsterComp.addExperience(expGained);
+                    
+                    if (leveledUp) {
+                        this.combatEvents.push({
+                            type: 'monster_leveled_up',
+                            monster: projectileComp.sourceMonster,
+                            newLevel: monsterComp.level
+                        });
+                    }
+                }
+            }
         }
     }
 

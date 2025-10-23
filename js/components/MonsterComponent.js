@@ -40,6 +40,32 @@ class MonsterComponent extends Component {
         return false;
     }
 
+    addExperience(amount) {
+        this.experience += amount;
+        
+        // Check for level up
+        const expNeeded = this.level * 100; // 100, 200, 300, etc.
+        if (this.experience >= expNeeded) {
+            this.levelUp();
+            return true;
+        }
+        return false;
+    }
+
+    levelUp() {
+        this.level++;
+        this.experience = 0;
+        
+        // Increase stats
+        this.stats.maxHealth = Math.floor(this.stats.maxHealth * 1.2);
+        this.stats.health = this.stats.maxHealth;
+        this.stats.damage = Math.floor(this.stats.damage * 1.15);
+        this.stats.range = Math.floor(this.stats.range * 1.1);
+        this.stats.attackSpeed = Math.floor(this.stats.attackSpeed * 1.05);
+        
+        return true;
+    }
+
     heal(amount) {
         this.stats.health = Math.min(this.stats.maxHealth, this.stats.health + amount);
     }

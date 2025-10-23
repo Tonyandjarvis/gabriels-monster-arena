@@ -20,6 +20,9 @@ class GameEngine {
         this.waveSystem = null;
         this.renderSystem = null;
         this.uiSystem = null;
+        this.audioSystem = null;
+        this.particleSystem = null;
+        this.tutorialSystem = null;
         
         // Game state
         this.gameStats = {
@@ -93,6 +96,9 @@ class GameEngine {
         this.waveSystem = new WaveSystem();
         this.renderSystem = new RenderSystem();
         this.uiSystem = new UISystem(this.canvas);
+        this.audioSystem = new AudioSystem();
+        this.particleSystem = new ParticleSystem();
+        this.tutorialSystem = new TutorialSystem();
         
         // Register systems
         this.systems.set('placement', this.placementSystem);
@@ -101,6 +107,9 @@ class GameEngine {
         this.systems.set('wave', this.waveSystem);
         this.systems.set('render', this.renderSystem);
         this.systems.set('ui', this.uiSystem);
+        this.systems.set('audio', this.audioSystem);
+        this.systems.set('particles', this.particleSystem);
+        this.systems.set('tutorial', this.tutorialSystem);
         
         // Setup system relationships
         this.setupSystemRelationships();
@@ -249,10 +258,30 @@ class GameEngine {
                 if (monster) {
                     this.uiSystem.spendCurrency(cost);
                     this.entities.set(monster.id, monster);
+                    this.audioSystem.playSound('monster_place');
                     this.placementSystem.exitPlacementMode();
                     this.uiSystem.exitPlacementMode();
+                    this.tutorialSystem.completeAction('place_monster');
                 }
             }
+        }
+        
+        // Handle monster upgrades
+        if (this.uiSystem.upgradeMode) {
+            const gridPos = this.placementSystem.worldToGrid(x, y);
+            const monster = this.placementSystem.getMonsterAt(gridPos.x, gridPos.y);
+            
+                if (monster) {
+                    if (this.uiSystem.upgradeMonster(monster)) {
+                        const monsterPos = monster.getComponent('PositionComponent');
+                        this.particleSystem.createUpgradeEffect(monsterPos.x + 16, monsterPos.y + 16);
+                        this.audioSystem.playSound('monster_upgrade');
+                        this.uiSystem.exitUpgradeMode();
+                        this.tutorialSystem.completeAction('upgrade_monster');
+                    }
+                } else {
+                    this.uiSystem.exitUpgradeMode();
+                }
         }
     }
 
@@ -343,6 +372,11 @@ class GameEngine {
                 case 'enemy_reached_end':
                     this.handleEnemyReachedEnd(event);
                     break;
+                case 'monster_leveled_up':
+                    console.log(`Monster leveled up to level ${event.newLevel}`);
+                    const monsterPos = event.monster.getComponent('PositionComponent');
+                    this.particleSystem.createLevelUpEffect(monsterPos.x + 16, monsterPos.y + 16);
+                    break;
             }
         });
     }
@@ -350,12 +384,20 @@ class GameEngine {
     handleEnemyDeath(event) {
         this.uiSystem.addCurrency(event.reward);
         this.uiSystem.addScore(event.reward * 10);
+        this.audioSystem.playSound('enemy_die');
+        this.tutorialSystem.completeAction('earn_currency');
+        
+        // Create death particle effect
+        const enemyPos = event.enemy.getComponent('PositionComponent');
+        this.particleSystem.createExplosion(enemyPos.x + 16, enemyPos.y + 16, '#ff6b6b', 6);
+        
         this.waveSystem.onEnemyDied(event.enemy);
     }
 
     handleWaveCompleted(event) {
         this.uiSystem.addCurrency(event.reward);
         this.uiSystem.addScore(event.reward * 5);
+        this.audioSystem.playSound('wave_complete');
         
         // Start next wave after a delay
         setTimeout(() => {
@@ -380,6 +422,7 @@ class GameEngine {
     gameOver() {
         this.gameState = 'GAME_OVER';
         this.isRunning = false;
+        this.audioSystem.playSound('game_over');
         
         // Save high score
         const currentScore = this.uiSystem.getGameStats().score;
@@ -397,11 +440,13 @@ class GameEngine {
     pauseGame() {
         this.gameState = 'PAUSE';
         this.isRunning = false;
+        this.audioSystem.stopMusic();
     }
 
     resumeGame() {
         this.gameState = 'GAMEPLAY';
         this.isRunning = true;
+        this.audioSystem.playMusic();
     }
 
     render() {
@@ -416,6 +461,21 @@ class GameEngine {
                 system.render(this.ctx);
             }
         });
+        
+        // Render pause menu if paused
+        if (this.gameState === 'PAUSE') {
+            this.renderPauseMenu(this.ctx);
+        }
+        
+        // Render game over screen if game over
+        if (this.gameState === 'GAME_OVER') {
+            this.renderGameOverScreen(this.ctx);
+        }
+        
+        // Render tutorial overlay if active
+        if (this.tutorialSystem.isActive()) {
+            this.tutorialSystem.render(this.ctx);
+        }
         
         // Render performance monitor if enabled
         if (this.settings.showFPS) {
@@ -468,5 +528,42 @@ class GameEngine {
         // (In a real implementation, you'd want to properly remove all event listeners)
         
         console.log('Game Engine destroyed');
+    }
+
+    renderPauseMenu(ctx) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 36px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('PAUSED', this.canvas.width / 2, this.canvas.height / 2 - 50);
+        
+        ctx.font = '18px Arial';
+        ctx.fillText('Press SPACE to resume', this.canvas.width / 2, this.canvas.height / 2 + 20);
+        ctx.fillText('Press ESC to exit upgrade mode', this.canvas.width / 2, this.canvas.height / 2 + 50);
+        
+        ctx.restore();
+    }
+
+    renderGameOverScreen(ctx) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        ctx.fillStyle = '#ff0000';
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2 - 100);
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = '24px Arial';
+        ctx.fillText(`Final Score: ${this.uiSystem.getGameStats().score}`, this.canvas.width / 2, this.canvas.height / 2 - 40);
+        
+        ctx.font = '18px Arial';
+        ctx.fillText('Refresh the page to play again', this.canvas.width / 2, this.canvas.height / 2 + 20);
+        
+        ctx.restore();
     }
 }
