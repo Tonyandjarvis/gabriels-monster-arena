@@ -7,6 +7,7 @@ class UISystem extends System {
         this.buttons = [];
         this.selectedMonster = null;
         this.placementMode = false;
+        this.removalMode = false;
         this.gameStats = {
             health: 100,
             maxHealth: 100,
@@ -68,6 +69,14 @@ class UISystem extends System {
             () => this.startWave()
         );
         this.buttons.push(startWaveButton);
+
+        // Add remove monster button
+        const removeMonsterButton = new RemoveMonsterButton(
+            this.canvas.width - 200, this.canvas.height - 300,
+            80, 80,
+            () => this.toggleRemovalMode()
+        );
+        this.buttons.push(removeMonsterButton);
     }
 
     createGameHUD() {
@@ -183,6 +192,16 @@ class UISystem extends System {
             this.gameEngine.startWave();
             this.gameEngine.tutorialSystem.completeAction('start_wave');
         }
+    }
+
+    toggleRemovalMode() {
+        this.removalMode = !this.removalMode;
+        this.placementMode = false; // Exit placement mode when entering removal mode
+        console.log('Removal mode:', this.removalMode ? 'ON' : 'OFF');
+    }
+
+    isRemovalMode() {
+        return this.removalMode;
     }
 
     update(deltaTime) {
@@ -584,6 +603,44 @@ class StartWaveButton {
         // Start wave text
         ctx.font = 'bold 10px Arial';
         ctx.fillText('START', this.x + this.width / 2, this.y + this.height - 5);
+        
+        ctx.restore();
+    }
+}
+
+class RemoveMonsterButton extends UIButton {
+    constructor(x, y, width, height, onClick) {
+        super(x, y, width, height, 'REMOVE', '#e74c3c', '#c0392b', onClick);
+    }
+
+    render(ctx) {
+        ctx.save();
+        
+        // Button background
+        if (this.selected) {
+            ctx.fillStyle = '#c0392b';
+        } else if (this.pressed) {
+            ctx.fillStyle = '#a93226';
+        } else {
+            ctx.fillStyle = '#e74c3c';
+        }
+        
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Button border
+        ctx.strokeStyle = this.selected ? '#fff' : '#000';
+        ctx.lineWidth = this.selected ? 3 : 2;
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        
+        // Remove icon (X symbol)
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('✕', this.x + this.width / 2, this.y + this.height / 2 + 8);
+        
+        // Remove text
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText('REMOVE', this.x + this.width / 2, this.y + this.height - 5);
         
         ctx.restore();
     }

@@ -77,9 +77,14 @@ class CombatSystem extends System {
     }
 
     updateMonsterCombat(monster, monsterComp, pos, deltaTime) {
-        // Find target if needed
-        if (!monsterComp.target || this.isTargetDead(monsterComp.target)) {
+        // Find target if needed - force retarget every few seconds to avoid stuck targeting
+        if (!monsterComp.target || this.isTargetDead(monsterComp.target) || 
+            (monsterComp.lastTargetTime && Date.now() - monsterComp.lastTargetTime > 3000)) {
             monsterComp.target = this.findNearestEnemy(pos, monsterComp.stats.range);
+            monsterComp.lastTargetTime = Date.now();
+            if (monsterComp.target) {
+                console.log(`Monster ${monster.id} targeting enemy ${monsterComp.target.id}`);
+            }
         }
         
         // Attack if target is in range and cooldown is ready

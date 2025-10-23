@@ -142,10 +142,30 @@ class TutorialSystem extends System {
             boxX + boxWidth / 2, boxY + boxHeight - 20
         );
         
+        // Navigation buttons
+        ctx.font = '14px Arial';
+        
+        // Previous button
+        if (this.currentStep > 0) {
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(boxX + 20, boxY + boxHeight - 40, 80, 25);
+            ctx.fillStyle = '#fff';
+            ctx.fillText('← Previous', boxX + 60, boxY + boxHeight - 20);
+        }
+        
+        // Next button
+        if (this.currentStep < this.steps.length - 1) {
+            ctx.fillStyle = '#27ae60';
+            ctx.fillRect(boxX + boxWidth - 100, boxY + boxHeight - 40, 80, 25);
+            ctx.fillStyle = '#fff';
+            ctx.fillText('Next →', boxX + boxWidth - 60, boxY + boxHeight - 20);
+        }
+        
         // Skip button
         ctx.fillStyle = '#e74c3c';
-        ctx.font = '12px Arial';
-        ctx.fillText('Click anywhere to skip tutorial', boxX + boxWidth / 2, boxY + boxHeight - 5);
+        ctx.fillRect(boxX + boxWidth / 2 - 40, boxY + boxHeight - 40, 80, 25);
+        ctx.fillStyle = '#fff';
+        ctx.fillText('Skip Tutorial', boxX + boxWidth / 2, boxY + boxHeight - 20);
         
         ctx.restore();
     }
@@ -177,5 +197,49 @@ class TutorialSystem extends System {
 
     getCurrentStep() {
         return this.steps[this.currentStep];
+    }
+
+    handleClick(x, y) {
+        if (!this.tutorialActive) return false;
+        
+        // Tutorial box dimensions
+        const boxWidth = 400;
+        const boxHeight = 200;
+        const boxX = (window.innerWidth - boxWidth) / 2;
+        const boxY = (window.innerHeight - boxHeight) / 2;
+        
+        // Check if click is in tutorial box
+        if (x >= boxX && x <= boxX + boxWidth && y >= boxY && y <= boxY + boxHeight) {
+            const buttonY = boxY + boxHeight - 40;
+            const buttonHeight = 25;
+            
+            // Previous button
+            if (this.currentStep > 0 && x >= boxX + 20 && x <= boxX + 100 && y >= buttonY && y <= buttonY + buttonHeight) {
+                this.previousStep();
+                return true;
+            }
+            
+            // Next button
+            if (this.currentStep < this.steps.length - 1 && x >= boxX + boxWidth - 100 && x <= boxX + boxWidth - 20 && y >= buttonY && y <= buttonY + buttonHeight) {
+                this.nextStep();
+                return true;
+            }
+            
+            // Skip button
+            if (x >= boxX + boxWidth / 2 - 40 && x <= boxX + boxWidth / 2 + 40 && y >= buttonY && y <= buttonY + buttonHeight) {
+                this.skipTutorial();
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    previousStep() {
+        if (this.currentStep > 0) {
+            this.currentStep--;
+            this.stepStartTime = Date.now();
+            console.log('Tutorial step:', this.steps[this.currentStep].title);
+        }
     }
 }

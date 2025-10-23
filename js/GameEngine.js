@@ -225,6 +225,49 @@ class GameEngine {
         console.log('Test monster added at (100, 100), total entities:', this.entities.size);
     }
 
+    findMonsterAtPosition(x, y) {
+        const tolerance = 20; // Click tolerance
+        
+        for (const [id, entity] of this.entities) {
+            if (entity.hasTag('monster')) {
+                const pos = entity.getComponent('PositionComponent');
+                const sprite = entity.getComponent('SpriteRenderer');
+                
+                if (pos && sprite) {
+                    const distance = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
+                    if (distance <= tolerance) {
+                        return entity;
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    removeMonster(monster) {
+        // Refund 50% of the monster cost
+        const monsterComp = monster.getComponent('MonsterComponent');
+        if (monsterComp) {
+            const refund = Math.floor(MonsterComponent.TYPES[monsterComp.type].stats.cost * 0.5);
+            this.uiSystem.addCurrency(refund);
+            console.log(`Monster removed, refunded ${refund} currency`);
+        }
+        
+        // Remove from all systems
+        this.systems.forEach(system => {
+            system.removeEntity(monster);
+        });
+        
+        // Remove from entities
+        this.entities.delete(monster.id);
+        
+        // Play removal sound
+        this.audioSystem.playSound('monster_place'); // Reuse placement sound for removal
+        
+        console.log('Monster removed, total entities:', this.entities.size);
+    }
+
     startWave() {
         if (this.waveSystem.startWave()) {
             this.gameStats.wave = this.waveSystem.currentWave + 1;
@@ -307,9 +350,23 @@ class GameEngine {
     handleInput(x, y, pressed) {
         if (!pressed) return;
         
-        // Handle UI interactions first
+        // Handle tutorial clicks first
+        if (this.tutorialSystem.isActive() && this.tutorialSystem.handleClick(x, y)) {
+            return;
+        }
+        
+        // Handle UI interactions
         if (this.uiSystem.handleTouch(x, y)) {
             return;
+        }
+        
+        // Handle monster removal
+        if (this.uiSystem.isRemovalMode()) {
+            const monster = this.findMonsterAtPosition(x, y);
+            if (monster) {
+                this.removeMonster(monster);
+                return;
+            }
         }
         
         // Handle monster placement

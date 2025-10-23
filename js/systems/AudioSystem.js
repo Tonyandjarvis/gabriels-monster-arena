@@ -87,6 +87,11 @@ class AudioSystem extends System {
             return; // Gracefully handle audio not available
         }
         
+        // Resume audio context if suspended (required for user interaction)
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume().catch(console.warn);
+        }
+        
         const sound = this.sounds.get(soundName);
         if (sound) {
             try {
