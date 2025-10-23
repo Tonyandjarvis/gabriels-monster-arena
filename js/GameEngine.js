@@ -28,7 +28,7 @@ class GameEngine {
         this.gameStats = {
             health: 100,
             maxHealth: 100,
-            currency: 100,
+            currency: 200, // Increased starting currency for better testing
             score: 0,
             wave: 1
         };
@@ -293,20 +293,27 @@ class GameEngine {
         }
         
         // Handle monster placement
-        if (this.placementSystem.placementMode && this.uiSystem.selectedMonster) {
+        if (this.uiSystem.placementMode && this.uiSystem.selectedMonster) {
             const monsterType = this.uiSystem.selectedMonster;
             const cost = MonsterComponent.TYPES[monsterType].stats.cost;
+            
+            console.log(`Attempting to place monster at (${x}, ${y}), cost: ${cost}, can afford: ${this.uiSystem.canAffordMonster(monsterType)}`);
             
             if (this.uiSystem.canAffordMonster(monsterType)) {
                 const monster = this.placementSystem.placeMonster(x, y, monsterType);
                 if (monster) {
+                    console.log('Monster placed successfully!');
                     this.uiSystem.spendCurrency(cost);
                     this.entities.set(monster.id, monster);
                     this.audioSystem.playSound('monster_place');
                     this.placementSystem.exitPlacementMode();
                     this.uiSystem.exitPlacementMode();
                     this.tutorialSystem.completeAction('place_monster');
+                } else {
+                    console.log('Monster placement failed - invalid position');
                 }
+            } else {
+                console.log('Cannot afford monster');
             }
         }
         

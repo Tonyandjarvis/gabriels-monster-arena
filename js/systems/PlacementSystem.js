@@ -59,17 +59,30 @@ class PlacementSystem extends System {
 
     isValidPlacement(gridX, gridY) {
         // Check if position is within bounds
-        if (!this.isInBounds(gridX, gridY)) return false;
+        if (!this.isInBounds(gridX, gridY)) {
+            console.log(`Placement invalid: out of bounds (${gridX}, ${gridY})`);
+            return false;
+        }
         
         // Check if position is not occupied
-        if (this.isOccupied(gridX, gridY)) return false;
+        if (this.isOccupied(gridX, gridY)) {
+            console.log(`Placement invalid: position occupied (${gridX}, ${gridY})`);
+            return false;
+        }
         
         // Check if position is not on the path
-        if (this.isOnPath(gridX, gridY)) return false;
+        if (this.isOnPath(gridX, gridY)) {
+            console.log(`Placement invalid: on path (${gridX}, ${gridY})`);
+            return false;
+        }
         
         // Check if position is not an obstacle
-        if (this.isObstacle(gridX, gridY)) return false;
+        if (this.isObstacle(gridX, gridY)) {
+            console.log(`Placement invalid: obstacle (${gridX}, ${gridY})`);
+            return false;
+        }
         
+        console.log(`Placement valid at (${gridX}, ${gridY})`);
         return true;
     }
 
