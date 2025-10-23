@@ -179,8 +179,8 @@ class UISystem extends System {
     }
 
     startWave() {
-        if (this.gameEngine && this.gameEngine.waveSystem) {
-            this.gameEngine.waveSystem.startWave();
+        if (this.gameEngine) {
+            this.gameEngine.startWave();
             this.gameEngine.tutorialSystem.completeAction('start_wave');
         }
     }
