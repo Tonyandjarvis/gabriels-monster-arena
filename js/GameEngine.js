@@ -371,6 +371,11 @@ class GameEngine {
                 if (system.enabled) {
                     try {
                         system.update(deltaTime);
+                        
+                        // Sync newly spawned entities from wave system
+                        if (system === this.waveSystem) {
+                            this.syncNewWaveEntities();
+                        }
                     } catch (error) {
                         console.error(`Error updating system ${system.constructor.name}:`, error);
                         // Disable problematic system but continue game
@@ -444,6 +449,18 @@ class GameEngine {
         if (entity.hasTag('monster')) {
             this.placementSystem.addEntity(entity);
         }
+    }
+
+    syncNewWaveEntities() {
+        // Sync newly spawned enemies from wave system
+        this.waveSystem.entities.forEach(entity => {
+            if (!this.entities.has(entity.id)) {
+                this.entities.set(entity.id, entity);
+                this.renderSystem.addEntity(entity);
+                this.combatSystem.addEntity(entity);
+                console.log('Synced new enemy entity:', entity.id);
+            }
+        });
     }
 
     cleanupDeadEntities() {

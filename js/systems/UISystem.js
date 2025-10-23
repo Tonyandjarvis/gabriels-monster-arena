@@ -352,6 +352,7 @@ class UISystem extends System {
 
     addCurrency(amount) {
         this.gameStats.currency += amount;
+        this.updateGameStats(this.gameStats);
     }
 
     takeDamage(damage) {
@@ -363,6 +364,7 @@ class UISystem extends System {
 
     addScore(points) {
         this.gameStats.score += points;
+        this.updateGameStats(this.gameStats);
     }
 }
 
