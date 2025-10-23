@@ -217,6 +217,7 @@ class GameEngine {
         testMonster.addTag('monster');
         
         this.entities.set(testMonster.id, testMonster);
+        this.syncEntityWithSystems(testMonster);
         console.log('Test monster added at (100, 100), total entities:', this.entities.size);
     }
 
@@ -320,6 +321,7 @@ class GameEngine {
                     console.log('Monster placed successfully!', monster);
                     this.uiSystem.spendCurrency(cost);
                     this.entities.set(monster.id, monster);
+                    this.syncEntityWithSystems(monster);
                     console.log('Monster added to entities, total entities:', this.entities.size);
                     this.audioSystem.playSound('monster_place');
                     this.placementSystem.exitPlacementMode();
@@ -432,6 +434,18 @@ class GameEngine {
         this.cleanupDeadEntities();
     }
 
+    syncEntityWithSystems(entity) {
+        // Add entity to all relevant systems
+        this.renderSystem.addEntity(entity);
+        this.combatSystem.addEntity(entity);
+        this.waveSystem.addEntity(entity);
+        
+        // Add to placement system if it's a monster
+        if (entity.hasTag('monster')) {
+            this.placementSystem.addEntity(entity);
+        }
+    }
+
     cleanupDeadEntities() {
         const toRemove = [];
         
@@ -449,6 +463,10 @@ class GameEngine {
         toRemove.forEach(id => {
             const entity = this.entities.get(id);
             if (entity) {
+                // Remove from all systems
+                this.systems.forEach(system => {
+                    system.removeEntity(entity);
+                });
                 entity.destroy();
                 this.entities.delete(id);
             }
@@ -553,8 +571,12 @@ class GameEngine {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         // Render systems
+        console.log(`Rendering with ${this.entities.size} entities in GameEngine`);
         this.systems.forEach(system => {
             if (system.enabled) {
+                if (system === this.renderSystem) {
+                    console.log(`RenderSystem has ${system.entities.size} entities`);
+                }
                 system.render(this.ctx);
             }
         });

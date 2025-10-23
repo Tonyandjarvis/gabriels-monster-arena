@@ -70,10 +70,10 @@ class PlacementSystem extends System {
             return false;
         }
         
-        // Check if position is not on the path (temporarily disabled for testing)
-        if (this.isOnPath(gridX, gridY)) {
-            console.log(`Placement invalid: on path (${gridX}, ${gridY}) - IGNORED FOR TESTING`);
-            // return false; // Temporarily disabled
+        // Check if position is not on the path (with tolerance)
+        if (this.isOnPathStrict(gridX, gridY)) {
+            console.log(`Placement invalid: too close to path (${gridX}, ${gridY})`);
+            return false;
         }
         
         // Check if position is not an obstacle
@@ -99,8 +99,9 @@ class PlacementSystem extends System {
         return this.grid.has(key);
     }
 
-    isOnPath(gridX, gridY) {
+    isOnPathStrict(gridX, gridY) {
         const worldPos = this.gridToWorld(gridX, gridY);
+        const tolerance = this.gridSize * 0.8; // Allow placement closer to path
         
         for (let i = 0; i < this.path.length - 1; i++) {
             const segment = {
@@ -108,7 +109,7 @@ class PlacementSystem extends System {
                 end: this.path[i + 1]
             };
             
-            if (this.pointOnSegment(worldPos, segment, this.gridSize)) {
+            if (this.pointOnSegment(worldPos, segment, tolerance)) {
                 return true;
             }
         }
