@@ -33,21 +33,29 @@ class MonsterComponent extends Component {
 
     takeDamage(damage) {
         this.stats.health -= damage;
-        if (this.stats.health <= 0) {
+        if (this.stats.health < 0) {
             this.stats.health = 0;
-            return true; // Monster died
         }
-        return false;
+        return this.stats.health <= 0;
+    }
+
+    heal(amount) {
+        this.stats.health += amount;
+        if (this.stats.health > this.stats.maxHealth) {
+            this.stats.health = this.stats.maxHealth;
+        }
+    }
+
+    isDead() {
+        return this.stats.health <= 0;
     }
 
     addExperience(amount) {
         this.experience += amount;
+        const requiredExp = this.level * 100;
         
-        // Check for level up
-        const expNeeded = this.level * 100; // 100, 200, 300, etc.
-        if (this.experience >= expNeeded) {
-            this.levelUp();
-            return true;
+        if (this.experience >= requiredExp) {
+            return this.levelUp();
         }
         return false;
     }
@@ -57,55 +65,34 @@ class MonsterComponent extends Component {
         this.experience = 0;
         
         // Increase stats
-        this.stats.maxHealth = Math.floor(this.stats.maxHealth * 1.2);
-        this.stats.health = this.stats.maxHealth;
-        this.stats.damage = Math.floor(this.stats.damage * 1.15);
-        this.stats.range = Math.floor(this.stats.range * 1.1);
-        this.stats.attackSpeed = Math.floor(this.stats.attackSpeed * 1.05);
+        this.stats.maxHealth += 20;
+        this.stats.health = this.stats.maxHealth; // Full heal on level up
+        this.stats.damage += 5;
+        this.stats.range += 10;
         
+        console.log(`Monster leveled up to level ${this.level}!`);
         return true;
-    }
-
-    heal(amount) {
-        this.stats.health = Math.min(this.stats.maxHealth, this.stats.health + amount);
-    }
-
-    upgrade() {
-        if (this.level < 3) {
-            this.level++;
-            this.experience = 0;
-            
-            // Increase stats
-            this.stats.maxHealth = Math.floor(this.stats.maxHealth * 1.5);
-            this.stats.health = this.stats.maxHealth;
-            this.stats.damage = Math.floor(this.stats.damage * 1.3);
-            this.stats.range = Math.floor(this.stats.range * 1.2);
-            this.stats.attackSpeed = Math.floor(this.stats.attackSpeed * 1.1);
-            this.stats.upgradeCost = Math.floor(this.stats.upgradeCost * 1.5);
-            
-            return true;
-        }
-        return false;
     }
 
     getUpgradeCost() {
         return this.stats.upgradeCost;
     }
 
-    getHealthPercentage() {
-        return this.stats.health / this.stats.maxHealth;
-    }
-
-    isDead() {
-        return this.stats.health <= 0;
-    }
-
-    resetTarget() {
-        this.target = null;
-    }
-
-    setTarget(target) {
-        this.target = target;
+    upgrade() {
+        if (this.level < 5) { // Max level 5
+            this.stats.maxHealth += 30;
+            this.stats.health = this.stats.maxHealth;
+            this.stats.damage += 10;
+            this.stats.range += 15;
+            this.stats.attackSpeed += 0.2;
+            this.level++;
+            
+            // Increase upgrade cost for next upgrade
+            this.stats.upgradeCost = Math.floor(this.stats.upgradeCost * 1.5);
+            
+            return true;
+        }
+        return false;
     }
 
     update(deltaTime) {
@@ -117,7 +104,7 @@ class MonsterComponent extends Component {
     }
 }
 
-// Monster types configuration
+// Monster types configuration - defined early for immediate access
 MonsterComponent.TYPES = {
     GEM: {
         name: 'Crystal Guardian',
