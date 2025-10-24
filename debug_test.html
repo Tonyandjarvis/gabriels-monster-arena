@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Test - Gabriel's Monster Arena</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #2c3e50;
+            color: white;
+        }
+        .debug-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .debug-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        .debug-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .debug-pass {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 4px solid #4CAF50;
+        }
+        .debug-fail {
+            background: rgba(244, 67, 54, 0.3);
+            border-left: 4px solid #f44336;
+        }
+        .debug-info {
+            background: rgba(33, 150, 243, 0.3);
+            border-left: 4px solid #2196F3;
+        }
+        #gameCanvas {
+            border: 2px solid #fff;
+            border-radius: 10px;
+            display: block;
+            margin: 20px auto;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #console-output {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>Debug Test - Gabriel's Monster Arena</h1>
+        
+        <div class="debug-section">
+            <h2>Debug Results</h2>
+            <div id="debug-results"></div>
+        </div>
+        
+        <div class="debug-section">
+            <h2>Game Canvas</h2>
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div>
+                <button id="testScripts">Test Script Loading</button>
+                <button id="testGameEngine">Test GameEngine</button>
+                <button id="testComponents">Test Components</button>
+                <button id="testSystems">Test Systems</button>
+            </div>
+        </div>
+        
+        <div class="debug-section">
+            <h2>Console Output</h2>
+            <div id="console-output"></div>
+        </div>
+    </div>
+
+    <!-- Load game scripts -->
+    <script src="js/engine/Component.js"></script>
+    <script src="js/engine/Entity.js"></script>
+    <script src="js/engine/System.js"></script>
+    <script src="js/components/PositionComponent.js"></script>
+    <script src="js/components/MonsterComponent.js"></script>
+    <script src="js/components/EnemyComponent.js"></script>
+    <script src="js/components/ProjectileComponent.js"></script>
+    <script src="js/components/SpriteRenderer.js"></script>
+    <script src="js/systems/RenderSystem.js"></script>
+    <script src="js/systems/PlacementSystem.js"></script>
+    <script src="js/systems/CombatSystem.js"></script>
+    <script src="js/systems/WaveSystem.js"></script>
+    <script src="js/systems/PathfindingSystem.js"></script>
+    <script src="js/systems/UISystem.js"></script>
+    <script src="js/systems/AudioSystem.js"></script>
+    <script src="js/systems/ParticleSystem.js"></script>
+    <script src="js/systems/TutorialSystem.js"></script>
+    <script src="js/utils/ObjectPool.js"></script>
+    <script src="js/utils/PerformanceMonitor.js"></script>
+    <script src="js/utils/SaveSystem.js"></script>
+    <script src="js/utils/ConfigLoader.js"></script>
+    <script src="js/utils/ConfigValidator.js"></script>
+    <script src="js/GameEngine.js"></script>
+
+    <script>
+        class DebugTestFramework {
+            constructor() {
+                this.results = [];
+                this.originalConsoleLog = console.log;
+                this.originalConsoleError = console.error;
+                this.setupConsoleCapture();
+                this.setupEventListeners();
+            }
+
+            setupConsoleCapture() {
+                const consoleOutput = document.getElementById('console-output');
+                
+                console.log = (...args) => {
+                    this.originalConsoleLog(...args);
+                    consoleOutput.innerHTML += args.join(' ') + '\n';
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                };
+                
+                console.error = (...args) => {
+                    this.originalConsoleError(...args);
+                    consoleOutput.innerHTML += '<span style="color: #f00;">ERROR: ' + args.join(' ') + '</span>\n';
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                };
+            }
+
+            setupEventListeners() {
+                document.getElementById('testScripts').addEventListener('click', () => this.testScriptLoading());
+                document.getElementById('testGameEngine').addEventListener('click', () => this.testGameEngine());
+                document.getElementById('testComponents').addEventListener('click', () => this.testComponents());
+                document.getElementById('testSystems').addEventListener('click', () => this.testSystems());
+            }
+
+            addResult(testName, passed, message) {
+                this.results.push({ testName, passed, message });
+                this.updateResultsDisplay();
+            }
+
+            updateResultsDisplay() {
+                const resultsDiv = document.getElementById('debug-results');
+                resultsDiv.innerHTML = '';
+                
+                this.results.forEach(result => {
+                    const div = document.createElement('div');
+                    div.className = `debug-result ${result.passed ? 'debug-pass' : 'debug-fail'}`;
+                    div.innerHTML = `<strong>${result.testName}:</strong> ${result.passed ? 'PASS' : 'FAIL'} - ${result.message}`;
+                    resultsDiv.appendChild(div);
+                });
+            }
+
+            testScriptLoading() {
+                console.log('=== TESTING SCRIPT LOADING ===');
+                this.results = [];
+                
+                const classes = [
+                    'Component', 'Entity', 'System',
+                    'PositionComponent', 'MonsterComponent', 'EnemyComponent', 'ProjectileComponent', 'SpriteRenderer',
+                    'RenderSystem', 'PlacementSystem', 'CombatSystem', 'WaveSystem', 'PathfindingSystem',
+                    'UISystem', 'AudioSystem', 'ParticleSystem', 'TutorialSystem',
+                    'ObjectPool', 'PerformanceMonitor', 'SaveSystem', 'ConfigLoader', 'ConfigValidator',
+                    'GameEngine'
+                ];
+                
+                classes.forEach(className => {
+                    const available = typeof window[className] !== 'undefined';
+                    this.addResult(className, available, available ? 'Class loaded successfully' : 'Class not found');
+                    console.log(`${className}: ${available ? 'AVAILABLE' : 'MISSING'}`);
+                });
+                
+                console.log('=== SCRIPT LOADING TEST COMPLETE ===');
+            }
+
+            testGameEngine() {
+                console.log('=== TESTING GAME ENGINE ===');
+                this.results = [];
+                
+                try {
+                    // Test GameEngine creation
+                    const gameEngine = new GameEngine();
+                    this.addResult('GameEngine Creation', true, 'GameEngine created successfully');
+                    
+                    // Test initialization
+                    gameEngine.initialize();
+                    this.addResult('GameEngine Initialization', true, 'GameEngine initialized successfully');
+                    
+                    // Test systems
+                    const systems = Array.from(gameEngine.systems.values());
+                    this.addResult('Systems Created', systems.length > 0, `${systems.length} systems created`);
+                    
+                    // Test canvas
+                    const canvas = document.getElementById('gameCanvas');
+                    const ctx = canvas.getContext('2d');
+                    this.addResult('Canvas Setup', !!ctx, 'Canvas context obtained');
+                    
+                } catch (error) {
+                    this.addResult('GameEngine Test', false, `Failed: ${error.message}`);
+                    console.error('GameEngine test failed:', error);
+                }
+                
+                console.log('=== GAME ENGINE TEST COMPLETE ===');
+            }
+
+            testComponents() {
+                console.log('=== TESTING COMPONENTS ===');
+                this.results = [];
+                
+                try {
+                    // Test Entity creation
+                    const entity = new Entity();
+                    this.addResult('Entity Creation', !!entity.id, `Entity created with ID: ${entity.id}`);
+                    
+                    // Test PositionComponent
+                    const posComp = new PositionComponent(100, 100);
+                    entity.addComponent(posComp);
+                    this.addResult('PositionComponent', entity.hasComponent('PositionComponent'), 'PositionComponent added');
+                    
+                    // Test MonsterComponent
+                    const monsterComp = new MonsterComponent('GEM');
+                    entity.addComponent(monsterComp);
+                    this.addResult('MonsterComponent', entity.hasComponent('MonsterComponent'), 'MonsterComponent added');
+                    
+                    // Test EnemyComponent
+                    const enemyComp = new EnemyComponent('BASIC');
+                    const enemyEntity = new Entity();
+                    enemyEntity.addComponent(enemyComp);
+                    this.addResult('EnemyComponent', enemyEntity.hasComponent('EnemyComponent'), 'EnemyComponent added');
+                    
+                } catch (error) {
+                    this.addResult('Component Test', false, `Failed: ${error.message}`);
+                    console.error('Component test failed:', error);
+                }
+                
+                console.log('=== COMPONENT TEST COMPLETE ===');
+            }
+
+            testSystems() {
+                console.log('=== TESTING SYSTEMS ===');
+                this.results = [];
+                
+                try {
+                    // Test RenderSystem
+                    const renderSystem = new RenderSystem();
+                    this.addResult('RenderSystem', !!renderSystem, 'RenderSystem created');
+                    
+                    // Test WaveSystem
+                    const waveSystem = new WaveSystem();
+                    this.addResult('WaveSystem', !!waveSystem, 'WaveSystem created');
+                    
+                    // Test CombatSystem
+                    const combatSystem = new CombatSystem();
+                    this.addResult('CombatSystem', !!combatSystem, 'CombatSystem created');
+                    
+                    // Test PathfindingSystem
+                    const pathfindingSystem = new PathfindingSystem();
+                    this.addResult('PathfindingSystem', !!pathfindingSystem, 'PathfindingSystem created');
+                    
+                } catch (error) {
+                    this.addResult('System Test', false, `Failed: ${error.message}`);
+                    console.error('System test failed:', error);
+                }
+                
+                console.log('=== SYSTEM TEST COMPLETE ===');
+            }
+        }
+
+        // Initialize debug framework when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.debugFramework = new DebugTestFramework();
+            console.log('Debug Test Framework initialized. Click buttons to test individual components.');
+        });
+    </script>
+</body>
+</html>

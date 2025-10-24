@@ -1,0 +1,170 @@
+{
+  "waves": [
+    {
+      "id": 1,
+      "name": "First Wave",
+      "description": "Basic enemies to get you started",
+      "enemies": [
+        {
+          "type": "BASIC",
+          "count": 5,
+          "spawnDelay": 1000,
+          "spawnInterval": 2000
+        },
+        {
+          "type": "FAST",
+          "count": 3,
+          "spawnDelay": 800,
+          "spawnInterval": 1500
+        }
+      ],
+      "reward": 100,
+      "experience": 50,
+      "difficulty": 1.0
+    },
+    {
+      "id": 2,
+      "name": "Second Wave",
+      "description": "Mixed enemy types with increased difficulty",
+      "enemies": [
+        {
+          "type": "BASIC",
+          "count": 8,
+          "spawnDelay": 900,
+          "spawnInterval": 1800
+        },
+        {
+          "type": "FAST",
+          "count": 5,
+          "spawnDelay": 700,
+          "spawnInterval": 1200
+        },
+        {
+          "type": "TANK",
+          "count": 2,
+          "spawnDelay": 1500,
+          "spawnInterval": 3000
+        }
+      ],
+      "reward": 150,
+      "experience": 75,
+      "difficulty": 1.2
+    },
+    {
+      "id": 3,
+      "name": "Third Wave",
+      "description": "All enemy types with increased challenge",
+      "enemies": [
+        {
+          "type": "BASIC",
+          "count": 10,
+          "spawnDelay": 800,
+          "spawnInterval": 1600
+        },
+        {
+          "type": "FAST",
+          "count": 8,
+          "spawnDelay": 600,
+          "spawnInterval": 1000
+        },
+        {
+          "type": "TANK",
+          "count": 3,
+          "spawnDelay": 1200,
+          "spawnInterval": 2500
+        },
+        {
+          "type": "FLYING",
+          "count": 4,
+          "spawnDelay": 1000,
+          "spawnInterval": 2000
+        }
+      ],
+      "reward": 200,
+      "experience": 100,
+      "difficulty": 1.5
+    },
+    {
+      "id": 4,
+      "name": "Fourth Wave",
+      "description": "Increased enemy numbers and faster spawning",
+      "enemies": [
+        {
+          "type": "BASIC",
+          "count": 15,
+          "spawnDelay": 700,
+          "spawnInterval": 1400
+        },
+        {
+          "type": "FAST",
+          "count": 12,
+          "spawnDelay": 500,
+          "spawnInterval": 900
+        },
+        {
+          "type": "TANK",
+          "count": 5,
+          "spawnDelay": 1000,
+          "spawnInterval": 2200
+        },
+        {
+          "type": "FLYING",
+          "count": 8,
+          "spawnDelay": 800,
+          "spawnInterval": 1800
+        }
+      ],
+      "reward": 250,
+      "experience": 125,
+      "difficulty": 1.8
+    },
+    {
+      "id": 5,
+      "name": "Fifth Wave",
+      "description": "Maximum challenge with all enemy types",
+      "enemies": [
+        {
+          "type": "BASIC",
+          "count": 20,
+          "spawnDelay": 600,
+          "spawnInterval": 1200
+        },
+        {
+          "type": "FAST",
+          "count": 15,
+          "spawnDelay": 400,
+          "spawnInterval": 800
+        },
+        {
+          "type": "TANK",
+          "count": 8,
+          "spawnDelay": 800,
+          "spawnInterval": 2000
+        },
+        {
+          "type": "FLYING",
+          "count": 12,
+          "spawnDelay": 600,
+          "spawnInterval": 1500
+        }
+      ],
+      "reward": 300,
+      "experience": 150,
+      "difficulty": 2.0
+    }
+  ],
+  "defaults": {
+    "spawnPosition": {
+      "x": 50,
+      "y": 200
+    },
+    "waveCompleteDelay": 2000,
+    "waveStartDelay": 1000,
+    "difficultyScaling": {
+      "healthMultiplier": 1.1,
+      "damageMultiplier": 1.05,
+      "speedMultiplier": 1.02,
+      "rewardMultiplier": 1.1
+    }
+  }
+}

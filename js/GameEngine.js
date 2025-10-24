@@ -9,6 +9,7 @@ class GameEngine {
         this.entities = new Map();
         this.systems = new Map();
         this.eventListeners = new Map();
+        this.eventQueue = [];
         this.performanceMonitor = new PerformanceMonitor();
         this.saveSystem = new SaveSystem();
         this.settings = this.saveSystem.loadSettings();
@@ -132,49 +133,122 @@ class GameEngine {
     }
 
     setupSystems() {
-        // Create systems
-        this.placementSystem = new PlacementSystem(32);
-        this.combatSystem = new CombatSystem();
-        this.pathfindingSystem = new PathfindingSystem();
-        this.waveSystem = new WaveSystem();
-        this.renderSystem = new RenderSystem();
-        this.uiSystem = new UISystem(this.canvas);
-        this.uiSystem.gameEngine = this; // Set reference to game engine
-        this.audioSystem = new AudioSystem();
-        this.particleSystem = new ParticleSystem();
-        this.tutorialSystem = new TutorialSystem();
-        
-        // Register systems
-        this.systems.set('placement', this.placementSystem);
-        this.systems.set('combat', this.combatSystem);
-        this.systems.set('pathfinding', this.pathfindingSystem);
-        this.systems.set('wave', this.waveSystem);
-        this.systems.set('render', this.renderSystem);
-        this.systems.set('ui', this.uiSystem);
-        this.systems.set('audio', this.audioSystem);
-        this.systems.set('particles', this.particleSystem);
-        this.systems.set('tutorial', this.tutorialSystem);
-        
-        // Setup system relationships
-        this.setupSystemRelationships();
-        
-        // Set cross-system references
-        this.renderSystem.pathfindingSystem = this.pathfindingSystem;
+        try {
+            console.log('Setting up game systems...');
+            
+            // Create systems in dependency order
+            this.renderSystem = new RenderSystem();
+            this.placementSystem = new PlacementSystem(32);
+            this.combatSystem = new CombatSystem();
+            this.pathfindingSystem = new PathfindingSystem();
+            this.waveSystem = new WaveSystem();
+            this.uiSystem = new UISystem(this.canvas);
+            this.audioSystem = new AudioSystem();
+            this.particleSystem = new ParticleSystem();
+            this.tutorialSystem = new TutorialSystem();
+            
+            // Set system priorities for proper update order
+            this.renderSystem.priority = 100; // Render last
+            this.uiSystem.priority = 90;
+            this.particleSystem.priority = 80;
+            this.combatSystem.priority = 70;
+            this.waveSystem.priority = 60;
+            this.pathfindingSystem.priority = 50;
+            this.placementSystem.priority = 40;
+            this.audioSystem.priority = 30;
+            this.tutorialSystem.priority = 20;
+            
+            // Register systems in priority order
+            const systemEntries = [
+                ['tutorial', this.tutorialSystem],
+                ['audio', this.audioSystem],
+                ['placement', this.placementSystem],
+                ['pathfinding', this.pathfindingSystem],
+                ['wave', this.waveSystem],
+                ['combat', this.combatSystem],
+                ['particles', this.particleSystem],
+                ['ui', this.uiSystem],
+                ['render', this.renderSystem]
+            ];
+            
+            systemEntries.forEach(([name, system]) => {
+                this.systems.set(name, system);
+                console.log(`Registered system: ${name} (priority: ${system.priority})`);
+            });
+            
+            // Set game engine reference for UI system
+            this.uiSystem.gameEngine = this;
+            
+            // Setup system dependencies
+            this.setupSystemDependencies();
+            
+            // Setup system relationships
+            this.setupSystemRelationships();
+            
+            console.log('All systems created successfully');
+        } catch (error) {
+            console.error('Failed to create systems:', error);
+            throw new Error(`System initialization failed: ${error.message}`);
+        }
+    }
+
+    setupSystemDependencies() {
+        try {
+            console.log('Setting up system dependencies...');
+            
+            // Set cross-system references
+            this.renderSystem.pathfindingSystem = this.pathfindingSystem;
+            this.renderSystem.placementSystem = this.placementSystem;
+            
+            // Set combat system dependencies
+            this.combatSystem.setDependencies({
+                renderSystem: this.renderSystem,
+                particleSystem: this.particleSystem,
+                audioSystem: this.audioSystem
+            });
+            
+            // Set wave system dependencies
+            this.waveSystem.setDependencies({
+                pathfindingSystem: this.pathfindingSystem,
+                renderSystem: this.renderSystem,
+                combatSystem: this.combatSystem
+            });
+            
+            // Set placement system dependencies
+            this.placementSystem.setDependencies({
+                renderSystem: this.renderSystem,
+                pathfindingSystem: this.pathfindingSystem
+            });
+            
+            console.log('System dependencies configured successfully');
+        } catch (error) {
+            console.error('Failed to setup system dependencies:', error);
+            throw new Error(`System dependency setup failed: ${error.message}`);
+        }
     }
 
     setupSystemRelationships() {
-        // Generate path for pathfinding system
-        const start = { x: 50, y: 200 };
-        const end = { x: this.canvas.width - 50, y: 400 };
-        this.pathfindingSystem.generatePath(start, end);
-        
-        console.log(`Generated path with ${this.pathfindingSystem.path.length} points from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
-        
-        // Set path for placement system
-        this.placementSystem.setPath(this.pathfindingSystem.getPath());
-        
-        // Set spawn position for wave system
-        this.waveSystem.spawnPosition = start;
+        try {
+            console.log('Setting up system relationships...');
+            
+            // Generate path for pathfinding system
+            const start = { x: 50, y: 200 };
+            const end = { x: this.canvas.width - 50, y: 400 };
+            this.pathfindingSystem.generatePath(start, end);
+            
+            console.log(`Generated path with ${this.pathfindingSystem.path.length} points from (${start.x}, ${start.y}) to (${end.x}, ${end.y})`);
+            
+            // Set path for placement system
+            this.placementSystem.setPath(this.pathfindingSystem.getPath());
+            
+            // Set spawn position for wave system
+            this.waveSystem.spawnPosition = start;
+            
+            console.log('System relationships configured successfully');
+        } catch (error) {
+            console.error('Failed to setup system relationships:', error);
+            throw new Error(`System relationship setup failed: ${error.message}`);
+        }
     }
 
     setupEventListeners() {
@@ -212,17 +286,46 @@ class GameEngine {
         // Don't auto-start wave - let user click START button
     }
 
+    addEntity(entity) {
+        try {
+            if (!entity || !entity.id) {
+                throw new Error('Invalid entity provided to addEntity');
+            }
+            
+            if (this.entities.has(entity.id)) {
+                console.warn(`Entity ${entity.id} already exists, skipping addition`);
+                return false;
+            }
+            
+            this.entities.set(entity.id, entity);
+            this.syncEntityWithSystems(entity);
+            console.log(`Entity ${entity.id} added successfully, total entities: ${this.entities.size}`);
+            return true;
+        } catch (error) {
+            console.error(`Failed to add entity ${entity?.id || 'unknown'}:`, error);
+            return false;
+        }
+    }
+
     addTestMonster() {
-        // Add a test monster to verify rendering works
-        const testMonster = new Entity();
-        testMonster.addComponent(new PositionComponent(100, 100));
-        testMonster.addComponent(new MonsterComponent('GEM', MonsterComponent.TYPES.GEM.stats));
-        testMonster.addComponent(new SpriteRenderer(32, 32, '#9c27b0'));
-        testMonster.addTag('monster');
-        
-        this.entities.set(testMonster.id, testMonster);
-        this.syncEntityWithSystems(testMonster);
-        console.log('Test monster added at (100, 100), total entities:', this.entities.size);
+        try {
+            console.log('Adding test monster...');
+            
+            // Add a test monster to verify rendering works
+            const testMonster = new Entity();
+            testMonster.addComponent(new PositionComponent(100, 100));
+            testMonster.addComponent(new MonsterComponent('GEM', MonsterComponent.TYPES.GEM.stats));
+            testMonster.addComponent(new SpriteRenderer(32, 32, '#9c27b0'));
+            testMonster.addTag('monster');
+            
+            if (this.addEntity(testMonster)) {
+                console.log('Test monster added at (100, 100), total entities:', this.entities.size);
+            } else {
+                console.error('Failed to add test monster');
+            }
+        } catch (error) {
+            console.error('Failed to create test monster:', error);
+        }
     }
 
     findMonsterAtPosition(x, y) {
@@ -381,13 +484,17 @@ class GameEngine {
                 if (monster) {
                     console.log('Monster placed successfully!', monster);
                     this.uiSystem.spendCurrency(cost);
-                    this.entities.set(monster.id, monster);
-                    this.syncEntityWithSystems(monster);
-                    console.log('Monster added to entities, total entities:', this.entities.size);
-                    this.audioSystem.playSound('monster_place');
-                    this.placementSystem.exitPlacementMode();
-                    this.uiSystem.exitPlacementMode();
-                    this.tutorialSystem.completeAction('place_monster');
+                    
+                    if (this.addEntity(monster)) {
+                        this.audioSystem.playSound('monster_place');
+                        this.placementSystem.exitPlacementMode();
+                        this.uiSystem.exitPlacementMode();
+                        this.tutorialSystem.completeAction('place_monster');
+                    } else {
+                        console.error('Failed to add monster to game engine');
+                        // Refund currency if entity addition failed
+                        this.uiSystem.addCurrency(cost);
+                    }
                 } else {
                     console.log('Monster placement failed - invalid position');
                 }
@@ -427,26 +534,34 @@ class GameEngine {
             this.performanceMonitor.update(performance.now());
             this.performanceMonitor.updateEntityStats(this.entities);
             
-            // Update systems with error handling
-            this.systems.forEach(system => {
-                if (system.enabled) {
-                    try {
-                        system.update(deltaTime);
-                        
-                        // Sync newly spawned entities from wave system
-                        if (system === this.waveSystem) {
-                            this.syncNewWaveEntities();
-                        }
-                    } catch (error) {
-                        console.error(`Error updating system ${system.constructor.name}:`, error);
-                        // Disable problematic system but continue game
-                        system.enabled = false;
+            // System health monitoring
+            this.monitorSystemHealth(deltaTime);
+            
+            // Update systems in priority order with error handling
+            const sortedSystems = Array.from(this.systems.values())
+                .filter(system => system.enabled)
+                .sort((a, b) => a.priority - b.priority);
+            
+            for (const system of sortedSystems) {
+                try {
+                    system.update(deltaTime);
+                    
+                    // Sync newly spawned entities from wave system
+                    if (system === this.waveSystem) {
+                        this.syncNewWaveEntities();
                     }
+                } catch (error) {
+                    console.error(`Error updating system ${system.constructor.name}:`, error);
+                    // Disable problematic system but continue game
+                    system.enabled = false;
                 }
-            });
+            }
             
             // Update entities
             this.updateEntities(deltaTime);
+            
+            // Process events
+            this.processEvents();
             
             // Process combat events
             this.processCombatEvents();
@@ -501,28 +616,60 @@ class GameEngine {
     }
 
     syncEntityWithSystems(entity) {
-        // Add entity to all relevant systems
-        this.renderSystem.addEntity(entity);
-        this.combatSystem.addEntity(entity);
-        this.waveSystem.addEntity(entity);
-        
-        // Add to placement system if it's a monster
-        if (entity.hasTag('monster')) {
-            this.placementSystem.addEntity(entity);
+        try {
+            if (!entity || !entity.id) {
+                throw new Error('Invalid entity provided to syncEntityWithSystems');
+            }
+            
+            console.log(`Syncing entity ${entity.id} with systems`);
+            
+            // Add entity to all relevant systems with error handling
+            const systemsToSync = [
+                { system: this.renderSystem, name: 'render' },
+                { system: this.combatSystem, name: 'combat' },
+                { system: this.waveSystem, name: 'wave' },
+                { system: this.pathfindingSystem, name: 'pathfinding' }
+            ];
+            
+            // Add to placement system if it's a monster
+            if (entity.hasTag('monster')) {
+                systemsToSync.push({ system: this.placementSystem, name: 'placement' });
+            }
+            
+            for (const { system, name } of systemsToSync) {
+                if (system && system.addEntity) {
+                    system.addEntity(entity);
+                    console.log(`Entity ${entity.id} added to ${name} system`);
+                }
+            }
+            
+            console.log(`Entity ${entity.id} synced successfully`);
+        } catch (error) {
+            console.error(`Failed to sync entity ${entity?.id || 'unknown'}:`, error);
+            throw new Error(`Entity sync failed: ${error.message}`);
         }
     }
 
     syncNewWaveEntities() {
-        // Sync newly spawned enemies from wave system
-        this.waveSystem.entities.forEach(entity => {
-            if (!this.entities.has(entity.id)) {
-                this.entities.set(entity.id, entity);
-                this.renderSystem.addEntity(entity);
-                this.combatSystem.addEntity(entity);
-                this.pathfindingSystem.addEntity(entity);
-                console.log('Synced new enemy entity:', entity.id);
+        try {
+            let syncedCount = 0;
+            
+            // Sync newly spawned enemies from wave system
+            this.waveSystem.entities.forEach(entity => {
+                if (!this.entities.has(entity.id)) {
+                    this.entities.set(entity.id, entity);
+                    this.syncEntityWithSystems(entity);
+                    syncedCount++;
+                    console.log(`Synced new enemy entity: ${entity.id} to all systems`);
+                }
+            });
+            
+            if (syncedCount > 0) {
+                console.log(`Synced ${syncedCount} new enemy entities to all systems`);
             }
-        });
+        } catch (error) {
+            console.error('Error syncing new wave entities:', error);
+        }
     }
 
     cleanupDeadEntities() {
@@ -552,6 +699,172 @@ class GameEngine {
         });
     }
 
+    // Event System Methods
+    emitEvent(eventType, eventData) {
+        try {
+            const event = {
+                type: eventType,
+                data: eventData,
+                timestamp: Date.now()
+            };
+            
+            this.eventQueue.push(event);
+            console.log(`Event emitted: ${eventType}`, eventData);
+        } catch (error) {
+            console.error(`Failed to emit event ${eventType}:`, error);
+        }
+    }
+
+    addEventListener(eventType, callback) {
+        try {
+            if (!this.eventListeners.has(eventType)) {
+                this.eventListeners.set(eventType, []);
+            }
+            this.eventListeners.get(eventType).push(callback);
+            console.log(`Event listener added for ${eventType}`);
+        } catch (error) {
+            console.error(`Failed to add event listener for ${eventType}:`, error);
+        }
+    }
+
+    removeEventListener(eventType, callback) {
+        try {
+            if (this.eventListeners.has(eventType)) {
+                const listeners = this.eventListeners.get(eventType);
+                const index = listeners.indexOf(callback);
+                if (index > -1) {
+                    listeners.splice(index, 1);
+                }
+            }
+        } catch (error) {
+            console.error(`Failed to remove event listener for ${eventType}:`, error);
+        }
+    }
+
+    processEvents() {
+        try {
+            while (this.eventQueue.length > 0) {
+                const event = this.eventQueue.shift();
+                
+                // Process system events
+                this.processSystemEvents(event);
+                
+                // Process custom event listeners
+                if (this.eventListeners.has(event.type)) {
+                    this.eventListeners.get(event.type).forEach(callback => {
+                        try {
+                            callback(event);
+                        } catch (error) {
+                            console.error(`Error in event listener for ${event.type}:`, error);
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error processing events:', error);
+        }
+    }
+
+    processSystemEvents(event) {
+        try {
+            switch (event.type) {
+                case 'enemy_died':
+                    this.handleEnemyDeath(event.data);
+                    break;
+                case 'wave_completed':
+                    this.handleWaveCompleted(event.data);
+                    break;
+                case 'enemy_reached_end':
+                    this.handleEnemyReachedEnd(event.data);
+                    break;
+                case 'monster_leveled_up':
+                    this.handleMonsterLevelUp(event.data);
+                    break;
+                case 'system_error':
+                    this.handleSystemError(event.data);
+                    break;
+            }
+        } catch (error) {
+            console.error(`Error processing system event ${event.type}:`, error);
+        }
+    }
+
+    handleSystemError(errorData) {
+        console.error('System error reported:', errorData);
+        // Could implement system recovery logic here
+    }
+
+    handleMonsterLevelUp(data) {
+        console.log(`Monster leveled up to level ${data.newLevel}`);
+        const monsterPos = data.monster.getComponent('PositionComponent');
+        if (monsterPos && this.particleSystem) {
+            this.particleSystem.createLevelUpEffect(monsterPos.x + 16, monsterPos.y + 16);
+        }
+    }
+
+    monitorSystemHealth(deltaTime) {
+        try {
+            // Initialize health monitoring timer
+            if (this.healthMonitorTimer === undefined) {
+                this.healthMonitorTimer = 0;
+            }
+            
+            this.healthMonitorTimer += deltaTime;
+            
+            // Report system health every 10 seconds
+            if (this.healthMonitorTimer >= 10000) {
+                const systemHealth = this.getSystemHealthReport();
+                console.log('=== SYSTEM HEALTH REPORT ===');
+                console.log(`Total Entities: ${this.entities.size}`);
+                console.log(`Active Systems: ${systemHealth.activeSystems}/${systemHealth.totalSystems}`);
+                console.log(`System Status:`, systemHealth.systemStatus);
+                console.log(`Entity Distribution:`, systemHealth.entityDistribution);
+                console.log('============================');
+                
+                this.healthMonitorTimer = 0;
+            }
+        } catch (error) {
+            console.error('Error in system health monitoring:', error);
+        }
+    }
+
+    getSystemHealthReport() {
+        const systemStatus = {};
+        const entityDistribution = {
+            monsters: 0,
+            enemies: 0,
+            projectiles: 0,
+            other: 0
+        };
+        
+        // Count entities by type
+        this.entities.forEach(entity => {
+            if (entity.hasTag('monster')) entityDistribution.monsters++;
+            else if (entity.hasTag('enemy')) entityDistribution.enemies++;
+            else if (entity.hasTag('projectile')) entityDistribution.projectiles++;
+            else entityDistribution.other++;
+        });
+        
+        // Check system status
+        this.systems.forEach((system, name) => {
+            systemStatus[name] = {
+                enabled: system.enabled,
+                entityCount: system.entities ? system.entities.size : 0,
+                priority: system.priority
+            };
+        });
+        
+        const activeSystems = Object.values(systemStatus).filter(s => s.enabled).length;
+        const totalSystems = Object.keys(systemStatus).length;
+        
+        return {
+            activeSystems,
+            totalSystems,
+            systemStatus,
+            entityDistribution
+        };
+    }
+
     processCombatEvents() {
         // Process events from all systems with combat events
         const waveEvents = this.waveSystem.getCombatEvents();
@@ -561,22 +874,8 @@ class GameEngine {
         const allEvents = [...waveEvents, ...pathfindingEvents, ...combatEvents];
         
         allEvents.forEach(event => {
-            switch (event.type) {
-                case 'enemy_died':
-                    this.handleEnemyDeath(event);
-                    break;
-                case 'wave_completed':
-                    this.handleWaveCompleted(event);
-                    break;
-                case 'enemy_reached_end':
-                    this.handleEnemyReachedEnd(event);
-                    break;
-                case 'monster_leveled_up':
-                    console.log(`Monster leveled up to level ${event.newLevel}`);
-                    const monsterPos = event.monster.getComponent('PositionComponent');
-                    this.particleSystem.createLevelUpEffect(monsterPos.x + 16, monsterPos.y + 16);
-                    break;
-            }
+            // Emit events through the event system
+            this.emitEvent(event.type, event);
         });
     }
 
@@ -651,19 +950,24 @@ class GameEngine {
     render() {
         if (!this.ctx) return;
         
-        // Clear canvas
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Render systems in priority order (render system handles canvas clearing)
+        const sortedSystems = Array.from(this.systems.values())
+            .filter(system => system.enabled && system.render)
+            .sort((a, b) => a.priority - b.priority);
         
-        // Render systems
         console.log(`Rendering with ${this.entities.size} entities in GameEngine`);
-        this.systems.forEach(system => {
-            if (system.enabled) {
+        for (const system of sortedSystems) {
+            try {
                 if (system === this.renderSystem) {
                     console.log(`RenderSystem has ${system.entities.size} entities`);
                 }
                 system.render(this.ctx);
+            } catch (error) {
+                console.error(`Error rendering system ${system.constructor.name}:`, error);
+                // Disable problematic system but continue rendering
+                system.enabled = false;
             }
-        });
+        }
         
         // Render pause menu if paused
         if (this.gameState === 'PAUSE') {

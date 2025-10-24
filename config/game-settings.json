@@ -1,0 +1,105 @@
+{
+  "game": {
+    "name": "Gabriel's Monster Arena",
+    "version": "1.0.0",
+    "description": "A tower defense game built with HTML5 Canvas and JavaScript"
+  },
+  "canvas": {
+    "defaultWidth": 800,
+    "defaultHeight": 600,
+    "mobileWidth": "100vw",
+    "mobileHeight": "100vh",
+    "backgroundColor": "#2c3e50"
+  },
+  "gameplay": {
+    "startingHealth": 100,
+    "maxHealth": 100,
+    "startingCurrency": 200,
+    "startingScore": 0,
+    "startingWave": 1,
+    "maxWaves": 5
+  },
+  "ui": {
+    "buttonSize": {
+      "width": 80,
+      "height": 80
+    },
+    "buttonSpacing": 20,
+    "buttonMargin": 20,
+    "fontFamily": "Arial, sans-serif",
+    "fontSize": {
+      "small": 12,
+      "medium": 16,
+      "large": 20,
+      "xlarge": 24
+    },
+    "colors": {
+      "primary": "#4CAF50",
+      "secondary": "#2196F3",
+      "danger": "#f44336",
+      "warning": "#ff9800",
+      "success": "#4CAF50",
+      "info": "#2196F3",
+      "light": "#ffffff",
+      "dark": "#000000"
+    }
+  },
+  "grid": {
+    "size": 32,
+    "color": "#34495e",
+    "lineWidth": 1,
+    "showGrid": true
+  },
+  "path": {
+    "width": 40,
+    "color": "#8B4513",
+    "borderColor": "#654321",
+    "borderWidth": 2,
+    "showPath": true
+  },
+  "audio": {
+    "masterVolume": 0.7,
+    "musicVolume": 0.5,
+    "sfxVolume": 0.8,
+    "enabled": true,
+    "musicEnabled": true,
+    "sfxEnabled": true
+  },
+  "graphics": {
+    "showFPS": false,
+    "showDebugInfo": false,
+    "particleEffects": true,
+    "animations": true,
+    "shadows": true,
+    "antialiasing": true
+  },
+  "performance": {
+    "targetFPS": 60,
+    "maxFPS": 120,
+    "minFPS": 30,
+    "frameSkip": false,
+    "objectPooling": true,
+    "dirtyRectangleRendering": false
+  },
+  "mobile": {
+    "touchSensitivity": 1.0,
+    "buttonSize": 44,
+    "gestureRecognition": true,
+    "orientationLock": false,
+    "hapticFeedback": true
+  },
+  "tutorial": {
+    "enabled": true,
+    "autoStart": true,
+    "skipEnabled": true,
+    "stepDuration": 5000,
+    "showProgress": true
+  },
+  "save": {
+    "autoSave": true,
+    "autoSaveInterval": 30000,
+    "maxSaveSlots": 3,
+    "saveOnExit": true,
+    "cloudSave": false
+  }
+}

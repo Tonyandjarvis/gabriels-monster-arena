@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Loading Issues</title>
+</head>
+<body>
+    <h1>Debug Game Loading</h1>
+    <div id="debug-info">Starting debug...</div>
+    <canvas id="gameCanvas" width="800" height="600" style="border: 1px solid black;"></canvas>
+
+    <script>
+        function log(message) {
+            const debugDiv = document.getElementById('debug-info');
+            debugDiv.innerHTML += '<br>' + new Date().toLocaleTimeString() + ': ' + message;
+            console.log(message);
+        }
+
+        function testLoading() {
+            log('Starting debug test...');
+            
+            // Test basic JavaScript
+            log('JavaScript working: ' + (typeof window !== 'undefined'));
+            
+            // Test if we can access the canvas
+            const canvas = document.getElementById('gameCanvas');
+            log('Canvas found: ' + (canvas !== null));
+            
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                log('Canvas context: ' + (ctx !== null));
+                
+                // Test basic drawing
+                ctx.fillStyle = 'red';
+                ctx.fillRect(10, 10, 50, 50);
+                log('Basic drawing test: SUCCESS');
+            }
+            
+            // Test script loading
+            const scripts = [
+                'js/utils/ObjectPool.js',
+                'js/engine/Entity.js',
+                'js/engine/Component.js',
+                'js/engine/System.js',
+                'js/components/PositionComponent.js',
+                'js/components/SpriteRenderer.js',
+                'js/components/MonsterComponent.js',
+                'js/components/EnemyComponent.js',
+                'js/components/ProjectileComponent.js',
+                'js/systems/PlacementSystem.js',
+                'js/systems/CombatSystem.js',
+                'js/systems/PathfindingSystem.js',
+                'js/systems/WaveSystem.js',
+                'js/systems/RenderSystem.js',
+                'js/systems/UISystem.js',
+                'js/systems/AudioSystem.js',
+                'js/systems/ParticleSystem.js',
+                'js/systems/TutorialSystem.js',
+                'js/utils/PerformanceMonitor.js',
+                'js/utils/SaveSystem.js',
+                'js/GameEngine.js'
+            ];
+            
+            let loadedCount = 0;
+            let failedScripts = [];
+            
+            function loadScript(src) {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.onload = () => {
+                        loadedCount++;
+                        log(`Loaded ${src} (${loadedCount}/${scripts.length})`);
+                        resolve();
+                    };
+                    script.onerror = () => {
+                        failedScripts.push(src);
+                        log(`FAILED to load ${src}`);
+                        reject(new Error(`Failed to load ${src}`));
+                    };
+                    document.head.appendChild(script);
+                });
+            }
+            
+            async function loadAllScripts() {
+                try {
+                    for (const src of scripts) {
+                        await loadScript(src);
+                    }
+                    
+                    log('All scripts loaded successfully!');
+                    
+                    // Test if classes are available
+                    log('Testing classes...');
+                    log('Entity: ' + (typeof Entity !== 'undefined'));
+                    log('Component: ' + (typeof Component !== 'undefined'));
+                    log('System: ' + (typeof System !== 'undefined'));
+                    log('MonsterComponent: ' + (typeof MonsterComponent !== 'undefined'));
+                    log('GameEngine: ' + (typeof GameEngine !== 'undefined'));
+                    
+                    if (typeof MonsterComponent !== 'undefined') {
+                        log('MonsterComponent.TYPES: ' + (typeof MonsterComponent.TYPES !== 'undefined'));
+                        if (MonsterComponent.TYPES) {
+                            log('Monster types: ' + Object.keys(MonsterComponent.TYPES).join(', '));
+                        }
+                    }
+                    
+                    // Test GameEngine creation
+                    if (typeof GameEngine !== 'undefined') {
+                        log('Testing GameEngine creation...');
+                        try {
+                            const gameEngine = new GameEngine();
+                            log('GameEngine created successfully!');
+                            
+                            // Test initialization
+                            log('Testing GameEngine initialization...');
+                            gameEngine.initialize();
+                            log('GameEngine initialized successfully!');
+                            
+                        } catch (error) {
+                            log('GameEngine error: ' + error.message);
+                            log('Stack trace: ' + error.stack);
+                        }
+                    }
+                    
+                } catch (error) {
+                    log('Script loading failed: ' + error.message);
+                    log('Failed scripts: ' + failedScripts.join(', '));
+                }
+            }
+            
+            loadAllScripts();
+        }
+        
+        // Start test when page loads
+        window.addEventListener('load', testLoading);
+    </script>
+</body>
+</html>

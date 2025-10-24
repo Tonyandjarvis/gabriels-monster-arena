@@ -10,6 +10,22 @@ class PlacementSystem extends System {
         this.placementPreview = null;
         this.path = [];
         this.obstacles = [];
+        
+        // System dependencies
+        this.renderSystem = null;
+        this.pathfindingSystem = null;
+    }
+
+    setDependencies(dependencies) {
+        try {
+            console.log('Setting PlacementSystem dependencies...');
+            this.renderSystem = dependencies.renderSystem;
+            this.pathfindingSystem = dependencies.pathfindingSystem;
+            console.log('PlacementSystem dependencies set successfully');
+        } catch (error) {
+            console.error('Failed to set PlacementSystem dependencies:', error);
+            throw new Error(`PlacementSystem dependency setup failed: ${error.message}`);
+        }
     }
 
     setPath(path) {
@@ -156,16 +172,40 @@ class PlacementSystem extends System {
         const entity = new Entity();
         entity.addComponent(new PositionComponent(worldPos.x, worldPos.y));
         
-        const monsterData = MonsterComponent.TYPES[monsterType];
-        const monster = new MonsterComponent(monsterType, monsterData.stats);
+        // Create monster component (will load from config if available)
+        const monster = new MonsterComponent(monsterType);
         entity.addComponent(monster);
         
+        // Get monster data for sprite rendering
+        const monsterData = this.getMonsterData(monsterType);
         const sprite = new SpriteRenderer(32, 32, monsterData.color);
         entity.addComponent(sprite);
         
         entity.addTag('monster');
         
         return entity;
+    }
+    
+    getMonsterData(monsterType) {
+        // Try to get from configuration first
+        if (window.configLoader && window.configLoader.configs.monsters) {
+            const monsterConfig = window.configLoader.configs.monsters.find(m => m.id === monsterType.toLowerCase());
+            if (monsterConfig) {
+                return {
+                    color: monsterConfig.color || '#9c27b0',
+                    name: monsterConfig.name || monsterType
+                };
+            }
+        }
+        
+        // Fallback to hardcoded types
+        const hardcodedTypes = {
+            'GEM': { color: '#9c27b0', name: 'Crystal Guardian' },
+            'SLIME': { color: '#4caf50', name: 'Slime Defender' },
+            'BEAST': { color: '#ff9800', name: 'Beast Warrior' }
+        };
+        
+        return hardcodedTypes[monsterType] || { color: '#9c27b0', name: monsterType };
     }
 
     getMonsterAt(gridX, gridY) {

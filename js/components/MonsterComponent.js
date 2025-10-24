@@ -1,23 +1,73 @@
 class MonsterComponent extends Component {
-    constructor(type, stats) {
+    constructor(type, stats = null) {
         super();
         this.type = type;
         this.level = 1;
         this.experience = 0;
-        this.stats = {
-            health: stats.health,
-            maxHealth: stats.health,
-            damage: stats.damage,
-            range: stats.range,
-            attackSpeed: stats.attackSpeed,
-            cost: stats.cost,
-            upgradeCost: stats.upgradeCost || stats.cost * 2
-        };
+        
+        // Use provided stats or load from configuration
+        if (stats) {
+            this.stats = {
+                health: stats.health,
+                maxHealth: stats.health,
+                damage: stats.damage,
+                range: stats.range,
+                attackSpeed: stats.attackSpeed,
+                cost: stats.cost,
+                upgradeCost: stats.upgradeCost || stats.cost * 2
+            };
+        } else {
+            // Load from configuration if available
+            this.loadFromConfig(type);
+        }
+        
         this.target = null;
         this.lastAttack = 0;
-        this.attackCooldown = 1000 / this.stats.attackSpeed;
         this.attackTimer = 0;
         this.isAttacking = false;
+        
+        // Set attack cooldown after stats are loaded
+        this.attackCooldown = 1000 / this.stats.attackSpeed;
+    }
+    
+    loadFromConfig(type) {
+        // Default stats as fallback
+        const defaultStats = {
+            health: 100,
+            damage: 25,
+            range: 150,
+            attackSpeed: 1.0,
+            cost: 50,
+            upgradeCost: 100
+        };
+        
+        // Try to load from configuration
+        if (window.configLoader && window.configLoader.configs.monsters) {
+            const monsterConfig = window.configLoader.configs.monsters.find(m => m.id === type.toLowerCase());
+            if (monsterConfig) {
+                this.stats = {
+                    health: monsterConfig.health,
+                    maxHealth: monsterConfig.health,
+                    damage: monsterConfig.damage,
+                    range: monsterConfig.range,
+                    attackSpeed: monsterConfig.attackSpeed,
+                    cost: monsterConfig.cost,
+                    upgradeCost: monsterConfig.upgradeCost || monsterConfig.cost * 2
+                };
+                return;
+            }
+        }
+        
+        // Use default stats
+        this.stats = {
+            health: defaultStats.health,
+            maxHealth: defaultStats.health,
+            damage: defaultStats.damage,
+            range: defaultStats.range,
+            attackSpeed: defaultStats.attackSpeed,
+            cost: defaultStats.cost,
+            upgradeCost: defaultStats.upgradeCost
+        };
     }
 
     canAttack() {

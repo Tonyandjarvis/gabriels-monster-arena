@@ -82,6 +82,29 @@ function startGame() {
             loadingScreen.classList.add('hidden');
         }
         
+        // Initialize configuration system
+        if (window.configLoader) {
+            console.log('Loading game configurations...');
+            window.configLoader.loadAllConfigs().then(() => {
+                console.log('Configurations loaded successfully');
+                initializeGame();
+            }).catch(error => {
+                console.warn('Failed to load configurations, using defaults:', error);
+                initializeGame();
+            });
+        } else {
+            console.warn('ConfigLoader not available, using defaults');
+            initializeGame();
+        }
+        
+    } catch (error) {
+        console.error('Failed to start game:', error);
+        showError('Failed to start game. Please refresh the page and try again.');
+    }
+}
+
+function initializeGame() {
+    try {
         // Initialize game engine
         gameEngine = new GameEngine();
         gameEngine.initialize();
@@ -95,8 +118,8 @@ function startGame() {
         showGameInstructions();
         
     } catch (error) {
-        console.error('Failed to start game:', error);
-        showError('Failed to start game. Please refresh the page and try again.');
+        console.error('Failed to initialize game:', error);
+        showError('Failed to initialize game. Please refresh the page and try again.');
     }
 }
 

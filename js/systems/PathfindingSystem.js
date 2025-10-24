@@ -19,15 +19,32 @@ class PathfindingSystem extends System {
     update(deltaTime) {
         // Update enemy movement along path
         let enemyCount = 0;
+        let movingEnemies = 0;
+        
         this.entities.forEach(entity => {
             if (entity.hasTag('enemy')) {
                 this.updateEntity(entity, deltaTime);
                 enemyCount++;
+                
+                // Check if enemy is actually moving
+                const enemyComp = entity.getComponent('EnemyComponent');
+                if (enemyComp && enemyComp.distanceTraveled > 0) {
+                    movingEnemies++;
+                }
             }
         });
         
-        if (enemyCount > 0) {
-            console.log(`PathfindingSystem updating ${enemyCount} enemies`);
+        // Debug logging every 3 seconds
+        if (enemyCount > 0 && this.debugTimer === undefined) {
+            this.debugTimer = 0;
+        }
+        
+        if (this.debugTimer !== undefined) {
+            this.debugTimer += deltaTime;
+            if (this.debugTimer >= 3000) {
+                console.log(`PathfindingSystem Debug - Total enemies: ${enemyCount}, Moving: ${movingEnemies}, Path length: ${this.getPathLength()}`);
+                this.debugTimer = 0;
+            }
         }
     }
 

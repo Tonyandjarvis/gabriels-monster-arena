@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Game Initialization</title>
+</head>
+<body>
+    <h1>Testing Game Initialization</h1>
+    <div id="status">Loading...</div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <script>
+        function testInitialization() {
+            const status = document.getElementById('status');
+            
+            try {
+                status.textContent = 'Testing basic classes...';
+                
+                // Test if basic classes exist
+                if (typeof Entity === 'undefined') {
+                    throw new Error('Entity class not found');
+                }
+                if (typeof Component === 'undefined') {
+                    throw new Error('Component class not found');
+                }
+                if (typeof System === 'undefined') {
+                    throw new Error('System class not found');
+                }
+                
+                status.textContent = 'Basic classes OK. Testing components...';
+                
+                // Test if component classes exist
+                if (typeof PositionComponent === 'undefined') {
+                    throw new Error('PositionComponent class not found');
+                }
+                if (typeof MonsterComponent === 'undefined') {
+                    throw new Error('MonsterComponent class not found');
+                }
+                
+                status.textContent = 'Components OK. Testing systems...';
+                
+                // Test if system classes exist
+                if (typeof PlacementSystem === 'undefined') {
+                    throw new Error('PlacementSystem class not found');
+                }
+                if (typeof CombatSystem === 'undefined') {
+                    throw new Error('CombatSystem class not found');
+                }
+                if (typeof UISystem === 'undefined') {
+                    throw new Error('UISystem class not found');
+                }
+                
+                status.textContent = 'Systems OK. Testing GameEngine...';
+                
+                // Test if GameEngine exists
+                if (typeof GameEngine === 'undefined') {
+                    throw new Error('GameEngine class not found');
+                }
+                
+                status.textContent = 'All classes found. Testing GameEngine initialization...';
+                
+                // Test GameEngine initialization
+                const canvas = document.getElementById('gameCanvas');
+                const gameEngine = new GameEngine();
+                
+                status.textContent = 'GameEngine created. Testing initialization...';
+                
+                gameEngine.initialize();
+                
+                status.textContent = 'SUCCESS: Game initialized successfully!';
+                status.style.color = 'green';
+                
+            } catch (error) {
+                status.textContent = 'ERROR: ' + error.message;
+                status.style.color = 'red';
+                console.error('Initialization error:', error);
+            }
+        }
+        
+        // Load all scripts first
+        const scripts = [
+            'js/utils/ObjectPool.js',
+            'js/engine/Entity.js',
+            'js/engine/Component.js',
+            'js/engine/System.js',
+            'js/components/PositionComponent.js',
+            'js/components/SpriteRenderer.js',
+            'js/components/MonsterComponent.js',
+            'js/components/EnemyComponent.js',
+            'js/components/ProjectileComponent.js',
+            'js/systems/PlacementSystem.js',
+            'js/systems/CombatSystem.js',
+            'js/systems/PathfindingSystem.js',
+            'js/systems/WaveSystem.js',
+            'js/systems/RenderSystem.js',
+            'js/systems/UISystem.js',
+            'js/systems/AudioSystem.js',
+            'js/systems/ParticleSystem.js',
+            'js/systems/TutorialSystem.js',
+            'js/utils/PerformanceMonitor.js',
+            'js/utils/SaveSystem.js',
+            'js/GameEngine.js'
+        ];
+        
+        let loadedScripts = 0;
+        
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load ${src}`));
+                document.head.appendChild(script);
+            });
+        }
+        
+        async function loadAllScripts() {
+            try {
+                for (const src of scripts) {
+                    await loadScript(src);
+                    loadedScripts++;
+                    document.getElementById('status').textContent = `Loading scripts... ${loadedScripts}/${scripts.length}`;
+                }
+                testInitialization();
+            } catch (error) {
+                document.getElementById('status').textContent = 'ERROR loading scripts: ' + error.message;
+                document.getElementById('status').style.color = 'red';
+            }
+        }
+        
+        loadAllScripts();
+    </script>
+</body>
+</html>

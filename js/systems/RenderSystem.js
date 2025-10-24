@@ -29,28 +29,41 @@ class RenderSystem extends System {
     }
 
     render(ctx) {
-        // Clear canvas
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        
-        // Render background
-        this.renderBackground(ctx);
-        
-        // Render placement grid
-        this.renderPlacementGrid(ctx);
-        
-        // Render path (if pathfinding system exists)
-        if (this.pathfindingSystem) {
-            this.pathfindingSystem.render(ctx);
+        try {
+            // Clear canvas (only RenderSystem should do this)
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            
+            // Render background
+            this.renderBackground(ctx);
+            
+            // Render placement grid
+            this.renderPlacementGrid(ctx);
+            
+            // Render path (if pathfinding system exists)
+            if (this.pathfindingSystem) {
+                this.pathfindingSystem.render(ctx);
+            }
+            
+            // Render game entities in proper order
+            this.renderEntities(ctx);
+            
+            // Render attack ranges
+            this.renderAttackRanges(ctx);
+            
+            // Render UI elements
+            this.renderUI(ctx);
+            
+            console.log(`RenderSystem rendered ${this.entities.size} entities`);
+        } catch (error) {
+            console.error('Error in RenderSystem render:', error);
+            // Show error on canvas
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Rendering Error', ctx.canvas.width / 2, ctx.canvas.height / 2);
         }
-        
-        // Render game entities
-        this.renderEntities(ctx);
-        
-        // Render attack ranges
-        this.renderAttackRanges(ctx);
-        
-        // Render UI elements
-        this.renderUI(ctx);
     }
 
     renderBackground(ctx) {
@@ -118,26 +131,35 @@ class RenderSystem extends System {
     }
 
     renderEntities(ctx) {
-        // Render enemies first (behind monsters)
-        this.entities.forEach(entity => {
-            if (entity.hasTag('enemy')) {
-                this.renderEntity(entity, ctx);
-            }
-        });
-        
-        // Render monsters
-        this.entities.forEach(entity => {
-            if (entity.hasTag('monster')) {
-                this.renderEntity(entity, ctx);
-            }
-        });
-        
-        // Render projectiles
-        this.entities.forEach(entity => {
-            if (entity.hasTag('projectile')) {
-                this.renderEntity(entity, ctx);
-            }
-        });
+        try {
+            // Create sorted list of entities by render priority
+            const entitiesToRender = Array.from(this.entities)
+                .filter(entity => entity.active)
+                .sort((a, b) => {
+                    // Define render order: enemies (back) -> monsters -> projectiles (front)
+                    const getRenderPriority = (entity) => {
+                        if (entity.hasTag('enemy')) return 1;
+                        if (entity.hasTag('monster')) return 2;
+                        if (entity.hasTag('projectile')) return 3;
+                        return 0;
+                    };
+                    
+                    return getRenderPriority(a) - getRenderPriority(b);
+                });
+            
+            // Render entities in order
+            entitiesToRender.forEach(entity => {
+                try {
+                    this.renderEntity(entity, ctx);
+                } catch (error) {
+                    console.error(`Error rendering entity ${entity.id}:`, error);
+                }
+            });
+            
+            console.log(`Rendered ${entitiesToRender.length} entities`);
+        } catch (error) {
+            console.error('Error in renderEntities:', error);
+        }
     }
 
     renderEntity(entity, ctx) {

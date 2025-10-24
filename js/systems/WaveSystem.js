@@ -13,6 +13,24 @@ class WaveSystem extends System {
         this.waveReward = 0;
         this.spawnPosition = { x: 50, y: 200 };
         this.combatEvents = [];
+        
+        // System dependencies
+        this.pathfindingSystem = null;
+        this.renderSystem = null;
+        this.combatSystem = null;
+    }
+
+    setDependencies(dependencies) {
+        try {
+            console.log('Setting WaveSystem dependencies...');
+            this.pathfindingSystem = dependencies.pathfindingSystem;
+            this.renderSystem = dependencies.renderSystem;
+            this.combatSystem = dependencies.combatSystem;
+            console.log('WaveSystem dependencies set successfully');
+        } catch (error) {
+            console.error('Failed to set WaveSystem dependencies:', error);
+            throw new Error(`WaveSystem dependency setup failed: ${error.message}`);
+        }
     }
 
     generateWaves() {
@@ -112,6 +130,11 @@ class WaveSystem extends System {
             this.spawnTimer += deltaTime;
             this.updateSpawning(deltaTime);
             this.updateWaveStatus();
+            
+            // Debug logging every 5 seconds
+            if (this.spawnTimer % 5000 < deltaTime) {
+                console.log(`WaveSystem Debug - Wave: ${this.currentWave}, Spawned: ${this.enemiesSpawned}/${this.enemiesInWave}, Alive: ${this.enemiesAlive}, Active: ${this.waveActive}`);
+            }
         }
     }
 

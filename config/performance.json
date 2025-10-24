@@ -1,0 +1,85 @@
+{
+  "rendering": {
+    "targetFPS": 60,
+    "maxFPS": 120,
+    "minFPS": 30,
+    "frameSkip": false,
+    "dirtyRectangleRendering": false,
+    "entityCulling": true,
+    "textureAtlas": false,
+    "spriteBatching": false
+  },
+  "memory": {
+    "objectPooling": true,
+    "entityPoolSize": 100,
+    "projectilePoolSize": 50,
+    "particlePoolSize": 200,
+    "garbageCollection": {
+      "enabled": true,
+      "interval": 30000,
+      "threshold": 0.8
+    }
+  },
+  "optimization": {
+    "spatialPartitioning": false,
+    "quadTree": false,
+    "collisionOptimization": true,
+    "updateOptimization": true,
+    "renderOptimization": true
+  },
+  "profiling": {
+    "enabled": false,
+    "metrics": {
+      "fps": true,
+      "memory": true,
+      "cpu": false,
+      "gpu": false,
+      "network": false
+    },
+    "reporting": {
+      "interval": 5000,
+      "logToConsole": false,
+      "logToFile": false
+    }
+  },
+  "mobile": {
+    "batteryOptimization": true,
+    "thermalThrottling": true,
+    "lowPowerMode": false,
+    "adaptiveQuality": true,
+    "qualityLevels": {
+      "low": {
+        "particles": false,
+        "shadows": false,
+        "antialiasing": false,
+        "maxEntities": 50
+      },
+      "medium": {
+        "particles": true,
+        "shadows": false,
+        "antialiasing": false,
+        "maxEntities": 100
+      },
+      "high": {
+        "particles": true,
+        "shadows": true,
+        "antialiasing": true,
+        "maxEntities": 200
+      }
+    }
+  },
+  "loading": {
+    "preloadAssets": true,
+    "lazyLoading": true,
+    "compression": true,
+    "caching": true,
+    "cacheSize": 50
+  },
+  "debugging": {
+    "performanceOverlay": false,
+    "entityCount": false,
+    "systemTiming": false,
+    "memoryUsage": false,
+    "fpsGraph": false
+  }
+}

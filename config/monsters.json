@@ -1,0 +1,109 @@
+{
+  "monsters": {
+    "GEM": {
+      "name": "Crystal Guardian",
+      "description": "A mystical crystal guardian with powerful ranged attacks",
+      "stats": {
+        "health": 150,
+        "maxHealth": 150,
+        "damage": 25,
+        "range": 120,
+        "attackSpeed": 1.5,
+        "cost": 50,
+        "upgradeCost": 100
+      },
+      "visual": {
+        "color": "#9c27b0",
+        "shape": "diamond",
+        "width": 32,
+        "height": 32
+      },
+      "abilities": {
+        "type": "ranged",
+        "projectileSpeed": 300,
+        "projectileColor": "#ff6b6b",
+        "projectileSize": 8
+      },
+      "leveling": {
+        "healthPerLevel": 20,
+        "damagePerLevel": 5,
+        "rangePerLevel": 5,
+        "attackSpeedPerLevel": 0.1,
+        "experienceRequired": [100, 200, 300, 400, 500]
+      }
+    },
+    "BLOB": {
+      "name": "Slime Defender",
+      "description": "A resilient slime creature with good health and moderate damage",
+      "stats": {
+        "health": 200,
+        "maxHealth": 200,
+        "damage": 15,
+        "range": 80,
+        "attackSpeed": 2.0,
+        "cost": 30,
+        "upgradeCost": 60
+      },
+      "visual": {
+        "color": "#4caf50",
+        "shape": "circle",
+        "width": 32,
+        "height": 32
+      },
+      "abilities": {
+        "type": "ranged",
+        "projectileSpeed": 250,
+        "projectileColor": "#4caf50",
+        "projectileSize": 6
+      },
+      "leveling": {
+        "healthPerLevel": 25,
+        "damagePerLevel": 3,
+        "rangePerLevel": 3,
+        "attackSpeedPerLevel": 0.15,
+        "experienceRequired": [100, 200, 300, 400, 500]
+      }
+    },
+    "ANIMAL": {
+      "name": "Beast Warrior",
+      "description": "A fierce beast with high damage but lower health",
+      "stats": {
+        "health": 100,
+        "maxHealth": 100,
+        "damage": 35,
+        "range": 100,
+        "attackSpeed": 1.0,
+        "cost": 70,
+        "upgradeCost": 140
+      },
+      "visual": {
+        "color": "#ff9800",
+        "shape": "triangle",
+        "width": 32,
+        "height": 32
+      },
+      "abilities": {
+        "type": "ranged",
+        "projectileSpeed": 400,
+        "projectileColor": "#ff9800",
+        "projectileSize": 10
+      },
+      "leveling": {
+        "healthPerLevel": 15,
+        "damagePerLevel": 7,
+        "rangePerLevel": 7,
+        "attackSpeedPerLevel": 0.05,
+        "experienceRequired": [100, 200, 300, 400, 500]
+      }
+    }
+  },
+  "defaults": {
+    "healthBarHeight": 4,
+    "healthBarOffset": -20,
+    "levelTextOffset": -5,
+    "attackRangeColor": "#ffff00",
+    "attackRangeAlpha": 0.3,
+    "attackRangeLineWidth": 2,
+    "attackRangeDashPattern": [5, 5]
+  }
+}

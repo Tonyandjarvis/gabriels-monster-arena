@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gabriel's Monster Arena</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #gameCanvas {
+            border: 2px solid #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: #2c3e50;
+            touch-action: none;
+        }
+
+        #loadingScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+        }
+
+        #loadingScreen h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #loadingScreen p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        #loadingBar {
+            width: 300px;
+            height: 20px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        #loadingProgress {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        #startButton {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            min-width: 120px;
+            min-height: 50px;
+        }
+
+        #startButton:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        #startButton:active {
+            transform: translateY(0);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            #loadingScreen h1 {
+                font-size: 2em;
+            }
+            
+            #loadingScreen p {
+                font-size: 1em;
+            }
+            
+            #loadingBar {
+                width: silence 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="loadingScreen">
+            <h1>🎮 Gabriel's Monster Arena</h1>
+            <p>Defend your realm with powerful monsters!</p>
+            <div id="loadingBar">
+                <div id="loadingProgress"></div>
+            </div>
+            <button id="startButton">Start Game</button>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+        // Simple Game Implementation - Standalone Version
+        let gameEngine = null;
+        let loadingProgress = 0;
+        let loadingComplete = false;
+
+        // Initialize the game when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Gabriel\'s Monster Arena - Starting initialization...');
+            
+            // Show loading screen
+            showLoadingScreen();
+            
+            // Start loading process
+            startLoading();
+        });
+
+        function showLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const startButton = document.getElementById('startButton');
+            
+            if (loadingScreen && startButton) {
+                startButton.addEventListener('click', startGame);
+            }
+        }
+
+        function startLoading() {
+            const loadingBar = document.getElementById('loadingProgress');
+            const loadingText = document.querySelector('#loadingScreen p');
+            
+            // Simulate loading progress
+            const loadingSteps = [
+                { progress: 20, text: 'Loading game engine...' },
+                { progress: 40, text: 'Initializing systems...' },
+                { progress: 60, text: 'Setting up graphics...' },
+                { progress: 80, text: 'Preparing monsters...' },
+                { progress: 100, text: 'Ready to play!' }
+            ];
+            
+            let currentStep = 0;
+            
+            function updateLoading() {
+                if (currentStep < loadingSteps.length) {
+                    const step = loadingSteps[currentStep];
+                    loadingProgress = step.progress;
+                    
+                    if (loadingBar) {
+                        loadingBar.style.width = loadingProgress + '%';
+                    }
+                    
+                    if (loadingText) {
+                        loadingText.textContent = step.text;
+                    }
+                    
+                    currentStep++;
+                    setTimeout(updateLoading, 500);
+                } else {
+                    loadingComplete = true;
+                    showStartButton();
+                }
+            }
+            
+            updateLoading();
+        }
+
+        function showStartButton() {
+            const startButton = document.getElementById('startButton');
+            if (startButton) {
+                startButton.style.display = 'block';
+                startButton.textContent = 'Start Game';
+            }
+        }
+
+        function startGame() {
+            try {
+                console.log('Starting Gabriel\'s Monster Arena...');
+                
+                // Hide loading screen
+                const loadingScreen = document.getElementById('loadingScreen');
+                if (loadingScreen) {
+                    loadingScreen.classList.add('hidden');
+                }
+                
+                // Initialize simple game
+                initializeSimpleGame();
+                
+                console.log('Game started successfully!');
+                
+                // Show game instructions
+                showGameInstructions();
+                
+            } catch (error) {
+                console.error('Failed to start game:', error);
+                showError('Failed to start game. Please refresh the page and try again.');
+            }
+        }
+
+        function initializeSimpleGame() {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            const isMobile = window.innerWidth <= 768;
+            const targetWidth = isMobile ? window.innerWidth : 800;
+            const targetHeight = isMobile ? window.innerHeight : 600;
+            
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            canvas.style.width = targetWidth + 'px';
+            canvas.style.height = targetHeight + 'px';
+            
+            // Simple game state
+            const gameState = {
+                monsters: [],
+                enemies: [],
+                projectiles: [],
+                currency: 200,
+                wave: 1,
+                health: 100,
+                isRunning: true
+            };
+            
+            // Simple game loop
+            function gameLoop() {
+                if (!gameState.isRunning) return;
+                
+                // Clear canvas
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw grid
+                drawGrid(ctx);
+                
+                // Draw path
+                drawPath(ctx);
+                
+                // Draw monsters
+                gameState.monsters.forEach(monster => {
+                    drawMonster(ctx, monster);
+                });
+                
+                // Draw enemies
+                gameState.enemies.forEach(enemy => {
+                    drawEnemy(ctx, enemy);
+                });
+                
+                // Draw projectiles
+                gameState.projectiles.forEach(projectile => {
+                    drawProjectile(ctx, projectile);
+                });
+                
+                // Draw UI
+                drawUI(ctx);
+                
+                requestAnimationFrame(gameLoop);
+            }
+            
+            // Drawing functions
+            function drawGrid(ctx) {
+                ctx.strokeStyle = '#34495e';
+                ctx.lineWidth = 1;
+                
+                const gridSize = 32;
+                for (let x = 0; x < canvas.width; x += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                
+                for (let y = 0; y < canvas.height; y += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+            }
+            
+            function drawPath(ctx) {
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 40;
+                ctx.lineCap = 'round';
+                
+                ctx.beginPath();
+                ctx.moveTo(50, canvas.height - 50);
+                ctx.lineTo(canvas.width - 100, canvas.height - 50);
+                ctx.lineTo(canvas.width - 100, 100);
+                ctx.lineTo(100, 100);
+                ctx.stroke();
+            }
+            
+            function drawMonster(ctx, monster) {
+                ctx.fillStyle = monster.color;
+                ctx.fillRect(monster.x - 16, monster.y - 16, 32, 32);
+                
+                // Draw health bar
+                ctx.fillStyle = 'red';
+                ctx.fillRect(monster.x - 16, monster.y - 20, 32, 4);
+                ctx.fillStyle = 'green';
+                ctx.fillRect(monster.x - 16, monster.y - 20, 32 * (monster.health / monster.maxHealth), 4);
+            }
+            
+            function drawEnemy(ctx, enemy) {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x - 12, enemy.y - 12, 24, 24);
+                
+                // Draw health bar
+                ctx.fillStyle = 'red';
+                ctx.fillRect(enemy.x - 12, enemy.y - 16, 24, 3);
+                ctx.fillStyle = 'green';
+                ctx.fillRect(enemy.x - 12, enemy.y - 16, 24 * (enemy.health / enemy.maxHealth), 3);
+            }
+            
+            function drawProjectile(ctx, projectile) {
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(projectile.x, projectile.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            function drawUI(ctx) {
+                // Draw currency
+                ctx.fillStyle = '#fff';
+                ctx.font = '20px Arial';
+                ctx.fillText(`Currency: ${gameState.currency}`, 20, 30);
+                
+                // Draw wave
+                ctx.fillText(`Wave: ${gameState.wave}`, 20, 60);
+                
+                // Draw health
+                ctx.fillText(`Health: ${gameState.health}`, 20, 90);
+                
+                // Draw monster selection buttons
+                const monsterTypes = [
+                    { name: 'Crystal', color: '#9c27b0', cost: 50 },
+                    { name: 'Slime', color: '#4caf50', cost: 30 },
+                    { name: 'Beast', color: '#ff9800', cost: 70 }
+                ];
+                
+                let buttonX = 20;
+                const buttonY = canvas.height - 100;
+                
+                monsterTypes.forEach(monster => {
+                    ctx.fillStyle = gameState.currency >= monster.cost ? monster.color : '#666';
+                    ctx.fillRect(buttonX, buttonY, 60, 60);
+                    
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '12px Arial';
+                    ctx.fillText(monster.name, buttonX + 5, buttonY + 35);
+                    ctx.fillText(monster.cost.toString(), buttonX + 5, buttonY + 50);
+                    
+                    buttonX += 70;
+                });
+                
+                // Draw START button
+                ctx.fillStyle = '#27ae60';
+                ctx.fillRect(canvas.width - 100, buttonY, 80, 60);
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px Arial';
+                ctx.fillText('START', canvas.width - 80, buttonY + 35);
+            }
+            
+            // Mouse/touch handling
+            canvas.addEventListener('click', function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Check if clicking on monster selection
+                const buttonY = canvas.height - 100;
+                if (y >= buttonY && y <= buttonY + 60) {
+                    const monsterTypes = [
+                        { name: 'Crystal', color: '#9c27b0', cost: 50 },
+                        { name: 'Slime', color: '#4caf50', cost: 30 },
+                        { name: 'Beast', color: '#ff9800', cost: 70 }
+                    ];
+                    
+                    let buttonX = 20;
+                    monsterTypes.forEach(monster => {
+                        if (x >= buttonX && x <= buttonX + 60 && gameState.currency >= monster.cost) {
+                            // Place monster at button position (for now)
+                            const monsterObj = {
+                                x: buttonX + 30, // Center of button
+                                y: buttonY + 30, // Center of button
+                                color: monster.color,
+                                health: 100,
+                                maxHealth: 100,
+                                damage: 25
+                            };
+                            gameState.monsters.push(monsterObj);
+                            gameState.currency -= monster.cost;
+                            console.log(`Placed ${monster.name} monster at (${monsterObj.x}, ${monsterObj.y})`);
+                        }
+                        buttonX += 70;
+                    });
+                } else {
+                    // Check if clicking on grid for placement
+                    const gridSize = 32;
+                    const gridX = Math.floor(x / gridSize) * gridSize + gridSize / 2;
+                    const gridY = Math.floor(y / gridSize) * gridSize + gridSize / 2;
+                    
+                    // Check if position is not on path and not too close to existing monsters
+                    if (!isOnPath(gridX, gridY) && !isTooCloseToMonster(gridX, gridY)) {
+                        // Place monster at grid position
+                        const monsterObj = {
+                            x: gridX,
+                            y: gridY,
+                            color: '#9c27b0', // Default crystal color
+                            health: 100,
+                            maxHealth: 100,
+                            damage: 25
+                        };
+                        gameState.monsters.push(monsterObj);
+                        gameState.currency -= 50; // Default cost
+                        console.log(`Placed monster at grid position (${gridX}, ${gridY})`);
+                    }
+                }
+                
+                // Check if clicking START button
+                if (x >= canvas.width - 100 && x <= canvas.width - 20 && y >= buttonY && y <= buttonY + 60) {
+                    // Start wave
+                    startWave();
+                }
+            });
+            
+            function isOnPath(x, y) {
+                // Check if position is on the brown path
+                const pathWidth = 40;
+                const tolerance = pathWidth / 2 + 10;
+                
+                // Check horizontal path segments
+                if (y >= canvas.height - 50 - tolerance && y <= canvas.height - 50 + tolerance) {
+                    if (x >= 50 - tolerance && x <= canvas.width - 100 + tolerance) {
+                        return true;
+                    }
+                }
+                
+                // Check vertical path segments
+                if (x >= canvas.width - 100 - tolerance && x <= canvas.width - 100 + tolerance) {
+                    if (y >= 100 - tolerance && y <= canvas.height - 50 + tolerance) {
+                        return true;
+                    }
+                }
+                
+                if (x >= 100 - tolerance && x <= 100 + tolerance) {
+                    if (y >= 100 - tolerance && y <= 100 + tolerance) {
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+            
+            function isTooCloseToMonster(x, y) {
+                const minDistance = 50;
+                return gameState.monsters.some(monster => {
+                    const distance = Math.sqrt((x - monster.x) ** 2 + (y - monster.y) ** 2);
+                    return distance < minDistance;
+                });
+            }
+            
+            function startWave() {
+                // Spawn enemies
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        const enemy = {
+                            x: 50,
+                            y: canvas.height - 50,
+                            color: '#ff6b6b',
+                            health: 50,
+                            maxHealth: 50,
+                            speed: 1,
+                            targetX: canvas.width - 100,
+                            targetY: 100
+                        };
+                        gameState.enemies.push(enemy);
+                    }, i * 1000);
+                }
+            }
+            
+            // Start game loop
+            gameLoop();
+            
+            // Store game state globally for debugging
+            window.gameState = gameState;
+        }
+
+        function showGameInstructions() {
+            // Create instructions overlay
+            const instructions = document.createElement('div');
+            instructions.id = 'instructions';
+            instructions.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+                font-family: Arial, sans-serif;
+            `;
+            
+            instructions.innerHTML = `
+                <h2>🎮 Gabriel's Monster Arena</h2>
+                <div style="max-width: 600px; text-align: center; margin: 20px;">
+                    <h3>How to Play:</h3>
+                    <p>1. Click on monster buttons at the bottom to select them</p>
+                    <p>2. Click on the grid to place monsters</p>
+                    <p>3. Click START to begin the wave</p>
+                    <p>4. Monsters will automatically attack enemies</p>
+                    <p>5. Defend against waves of enemies</p>
+                    <br>
+                    <p><strong>Monster Types:</strong></p>
+                    <p>🔮 Crystal Guardian - High damage, medium range</p>
+                    <p>🟢 Slime Defender - High health, low damage</p>
+                    <p>🦁 Beast Warrior - Very high damage, low health</p>
+                </div>
+                <button id="closeInstructions" style="
+                    padding: 15px 30px;
+                    font-size: 18px;
+                    background: #4CAF50;
+                    color: white;
+                    border: none;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    margin-top: 20px;
+                ">Start Playing!</button>
+            `;
+            
+            document.body.appendChild(instructions);
+            
+            // Close instructions when button is clicked
+            document.getElementById('closeInstructions').addEventListener('click', function() {
+                instructions.remove();
+            });
+            
+            // Close instructions after 10 seconds
+            setTimeout(() => {
+                if (instructions.parentNode) {
+                    instructions.remove();
+                }
+            }, 10000);
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #f44336;
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                font-family: Arial, sans-serif;
+                z-index: 1000;
+                max-width: 400px;
+                text-align: center;
+            `;
+            
+            errorDiv.innerHTML = `
+                <h3>Error</h3>
+                <p>${message}</p>
+                <button onclick="location.reload()" style="
+                    padding: 10px 20px;
+                    background: white;
+                    color: #f44336;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    margin-top: 10px;
+                ">Reload Page</button>
+            `;
+            
+            document.body.appendChild(errorDiv);
+        }
+
+        console.log('Gabriel\'s Monster Arena - Standalone version loaded!');
+    </script>
+</body>
+</html>

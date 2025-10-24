@@ -12,6 +12,24 @@ class CombatSystem extends System {
             () => this.createDamageNumber(),
             (damageNumber) => damageNumber.reset()
         );
+        
+        // System dependencies
+        this.renderSystem = null;
+        this.particleSystem = null;
+        this.audioSystem = null;
+    }
+
+    setDependencies(dependencies) {
+        try {
+            console.log('Setting CombatSystem dependencies...');
+            this.renderSystem = dependencies.renderSystem;
+            this.particleSystem = dependencies.particleSystem;
+            this.audioSystem = dependencies.audioSystem;
+            console.log('CombatSystem dependencies set successfully');
+        } catch (error) {
+            console.error('Failed to set CombatSystem dependencies:', error);
+            throw new Error(`CombatSystem dependency setup failed: ${error.message}`);
+        }
     }
 
     createProjectile() {
@@ -57,11 +75,20 @@ class CombatSystem extends System {
         // Process combat events
         this.processCombatEvents();
         
-        // Debug logging
-        const monsterCount = Array.from(this.entities).filter(e => e.hasTag('monster')).length;
-        const enemyCount = Array.from(this.entities).filter(e => e.hasTag('enemy')).length;
-        if (monsterCount > 0 || enemyCount > 0) {
-            console.log(`CombatSystem: ${monsterCount} monsters, ${enemyCount} enemies, ${this.projectiles.length} projectiles`);
+        // Debug logging every 4 seconds
+        if (this.debugTimer === undefined) {
+            this.debugTimer = 0;
+        }
+        
+        this.debugTimer += deltaTime;
+        if (this.debugTimer >= 4000) {
+            const monsterCount = Array.from(this.entities).filter(e => e.hasTag('monster')).length;
+            const enemyCount = Array.from(this.entities).filter(e => e.hasTag('enemy')).length;
+            const activeProjectiles = this.projectiles.length;
+            const activeDamageNumbers = this.damageNumbers.length;
+            
+            console.log(`CombatSystem Debug - Monsters: ${monsterCount}, Enemies: ${enemyCount}, Projectiles: ${activeProjectiles}, Damage Numbers: ${activeDamageNumbers}`);
+            this.debugTimer = 0;
         }
     }
 

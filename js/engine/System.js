@@ -16,11 +16,25 @@ class System {
     update(deltaTime) {
         if (!this.enabled) return;
         
-        this.entities.forEach(entity => {
-            if (entity.active) {
-                this.updateEntity(entity, deltaTime);
+        try {
+            this.entities.forEach(entity => {
+                if (entity.active) {
+                    try {
+                        this.updateEntity(entity, deltaTime);
+                    } catch (error) {
+                        console.error(`Error updating entity ${entity.id} in ${this.constructor.name}:`, error);
+                        // Don't remove entity, just log the error
+                    }
+                }
+            });
+        } catch (error) {
+            console.error(`Error in ${this.constructor.name} update:`, error);
+            // Disable system if it's causing critical errors
+            if (error.message.includes('critical')) {
+                this.enabled = false;
+                console.error(`${this.constructor.name} disabled due to critical error`);
             }
-        });
+        }
     }
 
     updateEntity(entity, deltaTime) {
@@ -30,11 +44,21 @@ class System {
     render(ctx) {
         if (!this.enabled) return;
         
-        this.entities.forEach(entity => {
-            if (entity.active) {
-                this.renderEntity(entity, ctx);
-            }
-        });
+        try {
+            this.entities.forEach(entity => {
+                if (entity.active) {
+                    try {
+                        this.renderEntity(entity, ctx);
+                    } catch (error) {
+                        console.error(`Error rendering entity ${entity.id} in ${this.constructor.name}:`, error);
+                        // Don't remove entity, just log the error
+                    }
+                }
+            });
+        } catch (error) {
+            console.error(`Error in ${this.constructor.name} render:`, error);
+            // Don't disable system for render errors, just log them
+        }
     }
 
     renderEntity(entity, ctx) {

@@ -1,0 +1,118 @@
+{
+  "enemies": {
+    "BASIC": {
+      "name": "Basic Enemy",
+      "description": "A standard enemy with balanced stats",
+      "stats": {
+        "health": 50,
+        "maxHealth": 50,
+        "damage": 10,
+        "speed": 1.0,
+        "reward": 10,
+        "experience": 5
+      },
+      "visual": {
+        "color": "#ff6b6b",
+        "shape": "rectangle",
+        "width": 24,
+        "height": 24
+      },
+      "behavior": {
+        "type": "ground",
+        "canFly": false,
+        "armor": 0,
+        "resistance": 0
+      }
+    },
+    "FAST": {
+      "name": "Fast Enemy",
+      "description": "A quick enemy with low health but high speed",
+      "stats": {
+        "health": 30,
+        "maxHealth": 30,
+        "damage": 8,
+        "speed": 2.0,
+        "reward": 15,
+        "experience": 8
+      },
+      "visual": {
+        "color": "#4ecdc4",
+        "shape": "circle",
+        "width": 20,
+        "height": 20
+      },
+      "behavior": {
+        "type": "ground",
+        "canFly": false,
+        "armor": 0,
+        "resistance": 0
+      }
+    },
+    "TANK": {
+      "name": "Tank Enemy",
+      "description": "A heavily armored enemy with high health",
+      "stats": {
+        "health": 150,
+        "maxHealth": 150,
+        "damage": 15,
+        "speed": 0.5,
+        "reward": 25,
+        "experience": 15
+      },
+      "visual": {
+        "color": "#45b7d1",
+        "shape": "rectangle",
+        "width": 32,
+        "height": 32
+      },
+      "behavior": {
+        "type": "ground",
+        "canFly": false,
+        "armor": 5,
+        "resistance": 0.1
+      }
+    },
+    "FLYING": {
+      "name": "Flying Enemy",
+      "description": "A flying enemy that can bypass ground obstacles",
+      "stats": {
+        "health": 40,
+        "maxHealth": 40,
+        "damage": 12,
+        "speed": 1.5,
+        "reward": 20,
+        "experience": 10
+      },
+      "visual": {
+        "color": "#96ceb4",
+        "shape": "triangle",
+        "width": 28,
+        "height": 28
+      },
+      "behavior": {
+        "type": "flying",
+        "canFly": true,
+        "armor": 0,
+        "resistance": 0
+      }
+    }
+  },
+  "defaults": {
+    "healthBarHeight": 3,
+    "healthBarOffset": -16,
+    "spawnAnimation": {
+      "duration": 500,
+      "scale": [0, 1],
+      "opacity": [0, 1]
+    },
+    "deathAnimation": {
+      "duration": 300,
+      "scale": [1, 0],
+      "opacity": [1, 0]
+    },
+    "movement": {
+      "smoothing": 0.1,
+      "rotationSpeed": 0.05
+    }
+  }
+}
