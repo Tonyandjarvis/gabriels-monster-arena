@@ -319,6 +319,7 @@ class UISystem extends System {
         ctx.fillStyle = 'white';
         ctx.font = '20px Arial';
         ctx.fillText('UISystem is rendering!', 20, 50);
+        ctx.fillText(`Buttons: ${this.buttons.length}`, 20, 80);
         ctx.restore();
         
         try {
