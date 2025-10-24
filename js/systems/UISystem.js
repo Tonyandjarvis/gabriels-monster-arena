@@ -608,9 +608,24 @@ class StartWaveButton {
     }
 }
 
-class RemoveMonsterButton extends UIButton {
+class RemoveMonsterButton {
     constructor(x, y, width, height, onClick) {
-        super(x, y, width, height, 'REMOVE', '#e74c3c', '#c0392b', onClick);
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.onClick = onClick;
+        this.selected = false;
+        this.pressed = false;
+    }
+
+    isPointInside(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    update(deltaTime) {
+        // Update button animations if needed
     }
 
     render(ctx) {
