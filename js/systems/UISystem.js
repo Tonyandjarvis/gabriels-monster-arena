@@ -312,6 +312,15 @@ class UISystem extends System {
         console.log('UISystem enabled:', this.enabled);
         console.log('Context:', ctx);
         
+        // CRITICAL TEST: Draw a big red rectangle to test if UISystem is rendering
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+        ctx.fillRect(10, 10, 200, 100);
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Arial';
+        ctx.fillText('UISystem is rendering!', 20, 50);
+        ctx.restore();
+        
         try {
             // Render HUD
             this.renderHUD(ctx);
