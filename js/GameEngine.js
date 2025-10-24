@@ -958,14 +958,26 @@ class GameEngine {
         console.log(`Rendering with ${this.entities.size} entities in GameEngine`);
         for (const system of sortedSystems) {
             try {
+                console.log(`Rendering system: ${system.constructor.name}`);
                 if (system === this.renderSystem) {
                     console.log(`RenderSystem has ${system.entities.size} entities`);
                 }
                 system.render(this.ctx);
             } catch (error) {
-                console.error(`Error rendering system ${system.constructor.name}:`, error);
-                // Disable problematic system but continue rendering
-                system.enabled = false;
+                console.error(`❌ Error rendering system ${system.constructor.name}:`, error);
+                console.error('Stack trace:', error.stack);
+                
+                // Don't disable system on first error - try to recover
+                if (!system.renderErrorCount) {
+                    system.renderErrorCount = 0;
+                }
+                system.renderErrorCount++;
+                
+                // Only disable after multiple consecutive errors
+                if (system.renderErrorCount > 10) {
+                    console.error(`❌ Disabling ${system.constructor.name} after ${system.renderErrorCount} errors`);
+                    system.enabled = false;
+                }
             }
         }
         

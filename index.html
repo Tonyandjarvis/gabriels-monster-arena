@@ -158,6 +158,22 @@
     <script src="js/utils/PerformanceMonitor.js"></script>
     <script src="js/utils/SaveSystem.js"></script>
     <script src="js/GameEngine.js"></script>
+    
+    <!-- Script Load Verification -->
+    <script>
+    // Verify all required classes are loaded
+    console.log('=== SCRIPT LOAD VERIFICATION ===');
+    console.log('Entity:', typeof Entity !== 'undefined' ? '✅' : '❌');
+    console.log('Component:', typeof Component !== 'undefined' ? '✅' : '❌');
+    console.log('System:', typeof System !== 'undefined' ? '✅' : '❌');
+    console.log('MonsterComponent:', typeof MonsterComponent !== 'undefined' ? '✅' : '❌');
+    console.log('MonsterComponent.TYPES:', typeof MonsterComponent !== 'undefined' && MonsterComponent.TYPES ? '✅' : '❌');
+    console.log('EnemyComponent:', typeof EnemyComponent !== 'undefined' ? '✅' : '❌');
+    console.log('UISystem:', typeof UISystem !== 'undefined' ? '✅' : '❌');
+    console.log('GameEngine:', typeof GameEngine !== 'undefined' ? '✅' : '❌');
+    console.log('================================');
+    </script>
+    
     <script src="js/main.js"></script>
 </body>
 </html>

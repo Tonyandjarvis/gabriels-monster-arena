@@ -1,6 +1,12 @@
 class UISystem extends System {
     constructor(canvas) {
         super();
+        console.log('🎨 UISystem constructor starting...');
+        console.log('Canvas:', canvas);
+        console.log('Canvas dimensions:', canvas ? `${canvas.width}x${canvas.height}` : 'NULL');
+        console.log('MonsterComponent available:', typeof MonsterComponent !== 'undefined');
+        console.log('MonsterComponent.TYPES:', typeof MonsterComponent !== 'undefined' ? MonsterComponent.TYPES : 'UNDEFINED');
+        
         this.canvas = canvas;
         this.elements = [];
         this.touchAreas = new Map();
@@ -15,36 +21,117 @@ class UISystem extends System {
             score: 0,
             wave: 1
         };
-        this.setupUI();
+        
+        // DON'T call setupUI here - use lazy initialization instead
+        // this.setupUI();  ❌ REMOVED
+        this.initialized = false;
+        console.log('🎨 UISystem constructor complete. Will initialize on first render.');
     }
 
     setupUI() {
-        this.createMonsterSelectionButtons();
-        this.createGameHUD();
-        this.setupResponsiveDesign();
+        console.log('🎨 setupUI called');
+        try {
+            this.createMonsterSelectionButtons();
+            console.log('✅ Monster buttons created:', this.buttons.length);
+        } catch (error) {
+            console.error('❌ Failed to create monster buttons:', error);
+        }
+        
+        try {
+            this.createGameHUD();
+            console.log('✅ Game HUD created');
+        } catch (error) {
+            console.error('❌ Failed to create game HUD:', error);
+        }
+        
+        try {
+            this.setupResponsiveDesign();
+            console.log('✅ Responsive design setup');
+        } catch (error) {
+            console.error('❌ Failed to setup responsive design:', error);
+        }
     }
 
     createMonsterSelectionButtons() {
-        const monsterTypes = Object.keys(MonsterComponent.TYPES);
-        const buttonWidth = 80;
-        const buttonHeight = 80;
-        const spacing = 20;
-        const startX = 20;
-        const startY = this.canvas.height - buttonHeight - 20;
-
-        monsterTypes.forEach((monsterType, index) => {
-            const x = startX + (buttonWidth + spacing) * index;
-            const y = startY;
-            const monsterData = MonsterComponent.TYPES[monsterType];
+        console.log('🎨 createMonsterSelectionButtons called');
+        console.log('MonsterComponent:', typeof MonsterComponent);
+        console.log('MonsterComponent.TYPES:', MonsterComponent.TYPES);
+        
+        // Defensive check
+        if (typeof MonsterComponent === 'undefined') {
+            console.error('❌ CRITICAL: MonsterComponent is not defined!');
+            console.error('This means the script load order is wrong.');
+            return;  // Exit early, don't crash
+        }
+        
+        if (!MonsterComponent.TYPES) {
+            console.error('❌ CRITICAL: MonsterComponent.TYPES is not defined!');
+            return;
+        }
+        
+        // Check canvas dimensions
+        if (!this.canvas) {
+            console.error('❌ CRITICAL: Canvas is null!');
+            return;
+        }
+        
+        if (this.canvas.height === 0 || this.canvas.width === 0) {
+            console.error('❌ CRITICAL: Canvas has zero dimensions!');
+            console.error('Canvas:', this.canvas.width, 'x', this.canvas.height);
+            return;
+        }
+        
+        try {
+            const monsterTypes = Object.keys(MonsterComponent.TYPES);
+            console.log('Monster types found:', monsterTypes);
             
-            const button = new MonsterButton(
-                x, y, buttonWidth, buttonHeight,
-                monsterType, monsterData,
-                () => this.selectMonster(monsterType)
-            );
+            const buttonWidth = 80;
+            const buttonHeight = 80;
+            const spacing = 20;
+            const startX = 20;
+            const startY = this.canvas.height - buttonHeight - 20;
+            console.log('Button positioning:', { startX, startY, canvasHeight: this.canvas.height });
             
-            this.buttons.push(button);
-        });
+            monsterTypes.forEach((monsterType, index) => {
+                try {
+                    const x = startX + (buttonWidth + spacing) * index;
+                    const y = startY;
+                    const monsterData = MonsterComponent.TYPES[monsterType];
+                    
+                    if (!monsterData) {
+                        console.error(`❌ No data for monster type: ${monsterType}`);
+                        return;
+                    }
+                    
+                    console.log(`Creating button ${index}: ${monsterType} at (${x}, ${y})`);
+                    
+                    const button = new MonsterButton(
+                        x, y, buttonWidth, buttonHeight,
+                        monsterType, monsterData,
+                        () => this.selectMonster(monsterType)
+                    );
+                    
+                    if (!button) {
+                        console.error(`❌ Button creation failed for: ${monsterType}`);
+                        return;
+                    }
+                    
+                    this.buttons.push(button);
+                    console.log(`✅ Button created: ${monsterType}`);
+                    
+                } catch (error) {
+                    console.error(`❌ Failed to create button ${index}:`, error);
+                    // Continue to next button instead of crashing
+                }
+            });
+            
+            console.log('✅ All monster buttons created. Total:', this.buttons.length);
+            
+        } catch (error) {
+            console.error('❌ CRITICAL ERROR in createMonsterSelectionButtons:', error);
+            console.error('Stack trace:', error.stack);
+            throw error;  // Re-throw to see if it's being caught silently
+        }
         
         // Add upgrade button
         const upgradeButton = new UpgradeButton(
@@ -214,21 +301,47 @@ class UISystem extends System {
     }
 
     render(ctx) {
-        // Render HUD
-        this.renderHUD(ctx);
-        
-        // Render monster selection buttons
-        this.renderMonsterButtons(ctx);
-        
-        // Render placement mode indicator
-        if (this.placementMode) {
-            this.renderPlacementModeIndicator(ctx);
+        // Lazy initialization on first render
+        if (!this.initialized) {
+            console.log('🎨 Initializing UISystem on first render...');
+            this.initializeUI();
         }
         
-        // Render upgrade mode indicator
-        if (this.upgradeMode) {
-            this.renderUpgradeModeIndicator(ctx);
+        console.log('🎨 UISystem.render() called');
+        console.log('Buttons to render:', this.buttons.length);
+        console.log('UISystem enabled:', this.enabled);
+        console.log('Context:', ctx);
+        
+        try {
+            // Render HUD
+            this.renderHUD(ctx);
+            console.log('✅ HUD rendered');
+            
+            // Render monster selection buttons
+            this.renderMonsterButtons(ctx);
+            console.log('✅ Buttons rendered');
+            
+            // Render placement mode indicator
+            if (this.placementMode) {
+                this.renderPlacementModeIndicator(ctx);
+            }
+            
+            // Render upgrade mode indicator
+            if (this.upgradeMode) {
+                this.renderUpgradeModeIndicator(ctx);
+            }
+        } catch (error) {
+            console.error('❌ ERROR in UISystem.render():', error);
+            console.error('Stack trace:', error.stack);
         }
+    }
+    
+    initializeUI() {
+        if (this.initialized) return;
+        console.log('🎨 Initializing UISystem...');
+        this.setupUI();
+        this.initialized = true;
+        console.log('🎨 UISystem initialization complete. Buttons created:', this.buttons.length);
     }
 
     renderHUD(ctx) {

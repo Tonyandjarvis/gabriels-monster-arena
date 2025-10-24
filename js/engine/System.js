@@ -42,7 +42,10 @@ class System {
     }
 
     render(ctx) {
-        if (!this.enabled) return;
+        if (!this.enabled) {
+            console.warn(`⚠️ ${this.constructor.name}.render() skipped - system is disabled!`);
+            return;
+        }
         
         try {
             this.entities.forEach(entity => {
