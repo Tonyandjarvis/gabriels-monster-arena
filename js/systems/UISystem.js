@@ -190,7 +190,9 @@ class UISystem extends System {
     startWave() {
         if (this.gameEngine) {
             this.gameEngine.startWave();
-            this.gameEngine.tutorialSystem.completeAction('start_wave');
+            if (this.gameEngine.tutorialSystem) {
+                this.gameEngine.tutorialSystem.completeAction('start_wave');
+            }
         }
     }
 
