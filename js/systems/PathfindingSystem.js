@@ -27,15 +27,18 @@ class PathfindingSystem extends System {
         let movingEnemies = 0;
         
         this.entities.forEach(entity => {
-            if (entity.hasTag('enemy')) {
-                this.updateEntity(entity, deltaTime);
-                enemyCount++;
-                
-                // Check if enemy is actually moving
-                const enemyComp = entity.getComponent('EnemyComponent');
-                if (enemyComp && enemyComp.distanceTraveled > 0) {
-                    movingEnemies++;
-                }
+            // Only process entities with enemy tag
+            if (!entity.hasTag('enemy')) return;
+            
+            const enemyComp = entity.getComponent('EnemyComponent');
+            if (!enemyComp) return;
+            
+            this.updateEntity(entity, deltaTime);
+            enemyCount++;
+            
+            // Check if enemy is actually moving
+            if (enemyComp.distanceTraveled > 0) {
+                movingEnemies++;
             }
         });
         

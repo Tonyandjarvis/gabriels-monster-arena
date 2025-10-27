@@ -83,23 +83,34 @@ class CombatSystem extends System {
         
         this.debugTimer += deltaTime;
         if (this.debugTimer >= 4000) {
-            const monsterCount = Array.from(this.entities).filter(e => e.hasTag('monster')).length;
-            const enemyCount = Array.from(this.entities).filter(e => e.hasTag('enemy')).length;
+            const allEntities = Array.from(this.entities);
+            const monsterCount = allEntities.filter(e => e.hasTag('monster')).length;
+            const enemyCount = allEntities.filter(e => e.hasTag('enemy')).length;
+            const projectileCount = allEntities.filter(e => e.hasTag('projectile')).length;
             const activeProjectiles = this.projectiles.length;
             const activeDamageNumbers = this.damageNumbers.length;
             
-            console.log(`CombatSystem Debug - Monsters: ${monsterCount}, Enemies: ${enemyCount}, Projectiles: ${activeProjectiles}, Damage Numbers: ${activeDamageNumbers}`);
+            console.log(`CombatSystem Debug:
+        Total entities: ${allEntities.length}
+        - Monsters: ${monsterCount}
+        - Enemies: ${enemyCount}
+        - Projectiles (entities): ${projectileCount}
+        Active projectile pool: ${activeProjectiles}
+        Active damage numbers: ${activeDamageNumbers}`);
             this.debugTimer = 0;
         }
     }
 
     updateMonsters(deltaTime) {
-        this.entities.forEach(monster => {
-            const monsterComp = monster.getComponent('MonsterComponent');
-            const pos = monster.getComponent('PositionComponent');
+        this.entities.forEach(entity => {
+            // Only process entities with monster tag
+            if (!entity.hasTag('monster')) return;
+            
+            const monsterComp = entity.getComponent('MonsterComponent');
+            const pos = entity.getComponent('PositionComponent');
             
             if (monsterComp && pos && !monsterComp.isDead()) {
-                this.updateMonsterCombat(monster, monsterComp, pos, deltaTime);
+                this.updateMonsterCombat(entity, monsterComp, pos, deltaTime);
             }
         });
     }
