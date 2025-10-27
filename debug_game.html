@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabriel's Monster Arena - Debug Version</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+        }
+        #debug-info {
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #gameCanvas {
+            border: 2px solid #fff;
+            background: #34495e;
+            display: block;
+            margin: 20px auto;
+        }
+        .button {
+            background: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 14px;
+        }
+        .button:hover {
+            background: #c0392b;
+        }
+        .button.success {
+            background: #27ae60;
+        }
+        .button.success:hover {
+            background: #229954;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .status {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gabriel's Monster Arena - Debug Version</h1>
+    
+    <div class="status">
+        <strong>Debug Console:</strong>
+        <div id="debug-info">Starting debug...</div>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div class="controls">
+        <button class="button" onclick="startDebugGame()">Start Game</button>
+        <button class="button" onclick="checkGameState()">Check State</button>
+        <button class="button" onclick="forceStartWave()">Force Start Wave</button>
+        <button class="button" onclick="addTestMonster()">Add Test Monster</button>
+        <button class="button" onclick="clearDebug()">Clear Debug</button>
+    </div>
+
+    <script>
+        let gameEngine = null;
+        
+        function log(message) {
+            const debugDiv = document.getElementById('debug-info');
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.textContent += timestamp + ': ' + message + '\n';
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearDebug() {
+            document.getElementById('debug-info').textContent = 'Debug cleared...\n';
+        }
+        
+        function startDebugGame() {
+            log('=== STARTING DEBUG GAME ===');
+            
+            try {
+                // Check if all required classes are available
+                log('Checking available classes...');
+                log('GameEngine: ' + (typeof GameEngine !== 'undefined'));
+                log('Entity: ' + (typeof Entity !== 'undefined'));
+                log('MonsterComponent: ' + (typeof MonsterComponent !== 'undefined'));
+                log('EnemyComponent: ' + (typeof EnemyComponent !== 'undefined'));
+                
+                if (typeof GameEngine === 'undefined') {
+                    log('ERROR: GameEngine class not found!');
+                    return;
+                }
+                
+                // Initialize game engine directly
+                log('Creating GameEngine...');
+                gameEngine = new GameEngine();
+                log('GameEngine created successfully');
+                
+                log('Initializing GameEngine...');
+                gameEngine.initialize();
+                log('GameEngine initialized successfully');
+                
+                log('Starting GameEngine...');
+                gameEngine.start();
+                log('GameEngine started successfully');
+                
+                // Check initial game state
+                checkGameState();
+                
+                log('=== GAME STARTED SUCCESSFULLY ===');
+                
+            } catch (error) {
+                log('ERROR: ' + error.message);
+                log('Stack trace: ' + error.stack);
+                console.error('Game start error:', error);
+            }
+        }
+        
+        function checkGameState() {
+            if (!gameEngine) {
+                log('ERROR: GameEngine not initialized');
+                return;
+            }
+            
+            log('=== GAME STATE CHECK ===');
+            log('Game State: ' + gameEngine.gameState);
+            log('Is Running: ' + gameEngine.isRunning);
+            log('Entities Count: ' + gameEngine.entities.size);
+            log('Systems Count: ' + gameEngine.systems.size);
+            log('Canvas: ' + (gameEngine.canvas ? 'Found' : 'Missing'));
+            log('Context: ' + (gameEngine.ctx ? 'Found' : 'Missing'));
+            
+            // Check game stats
+            if (gameEngine.gameStats) {
+                log('Health: ' + gameEngine.gameStats.health + '/' + gameEngine.gameStats.maxHealth);
+                log('Currency: ' + gameEngine.gameStats.currency);
+                log('Score: ' + gameEngine.gameStats.score);
+                log('Wave: ' + gameEngine.gameStats.wave);
+            }
+            
+            // Check systems
+            log('=== SYSTEMS STATUS ===');
+            gameEngine.systems.forEach((system, name) => {
+                log('System ' + name + ': ' + system.constructor.name + ' (priority: ' + system.priority + ')');
+            });
+            
+            // Check entities
+            log('=== ENTITIES STATUS ===');
+            if (gameEngine.entities.size > 0) {
+                gameEngine.entities.forEach((entity, id) => {
+                    const components = [];
+                    entity.components.forEach((comp, name) => {
+                        components.push(name);
+                    });
+                    log('Entity ' + id + ': ' + components.join(', '));
+                });
+            } else {
+                log('No entities found');
+            }
+            
+            // Check wave system
+            if (gameEngine.waveSystem) {
+                log('=== WAVE SYSTEM STATUS ===');
+                log('Current Wave: ' + gameEngine.waveSystem.currentWave);
+                log('Wave Active: ' + gameEngine.waveSystem.waveActive);
+                log('Enemies Alive: ' + gameEngine.waveSystem.enemiesAlive);
+                log('Enemies Spawned: ' + gameEngine.waveSystem.enemiesSpawned);
+            }
+        }
+        
+        function forceStartWave() {
+            if (!gameEngine) {
+                log('ERROR: GameEngine not initialized');
+                return;
+            }
+            
+            try {
+                log('=== FORCING WAVE START ===');
+                gameEngine.waveSystem.startWave();
+                log('Wave started manually');
+                
+                // Update game state
+                setTimeout(() => {
+                    checkGameState();
+                }, 100);
+                
+            } catch (error) {
+                log('ERROR starting wave: ' + error.message);
+                console.error('Wave start error:', error);
+            }
+        }
+        
+        function addTestMonster() {
+            if (!gameEngine) {
+                log('ERROR: GameEngine not initialized');
+                return;
+            }
+            
+            try {
+                log('=== ADDING TEST MONSTER ===');
+                
+                // Create a test monster
+                const entity = new Entity();
+                entity.addComponent(new PositionComponent(200, 300));
+                entity.addComponent(new MonsterComponent('GEM', MonsterComponent.TYPES.GEM.stats));
+                entity.addComponent(new SpriteRenderer(32, 32, '#00ff00'));
+                
+                gameEngine.entities.set(entity.id, entity);
+                gameEngine.syncEntityWithSystems(entity);
+                
+                log('Test monster added at (200, 300)');
+                checkGameState();
+                
+            } catch (error) {
+                log('ERROR adding monster: ' + error.message);
+                console.error('Monster add error:', error);
+            }
+        }
+        
+        // Auto-check when page loads
+        window.addEventListener('load', function() {
+            log('=== PAGE LOADED ===');
+            log('Checking script availability...');
+            log('GameEngine: ' + (typeof GameEngine !== 'undefined'));
+            log('Entity: ' + (typeof Entity !== 'undefined'));
+            log('MonsterComponent: ' + (typeof MonsterComponent !== 'undefined'));
+            log('EnemyComponent: ' + (typeof EnemyComponent !== 'undefined'));
+            log('PositionComponent: ' + (typeof PositionComponent !== 'undefined'));
+            log('SpriteRenderer: ' + (typeof SpriteRenderer !== 'undefined'));
+            log('Canvas element: ' + (document.getElementById('gameCanvas') ? 'Found' : 'Missing'));
+            log('=== READY FOR DEBUGGING ===');
+        });
+        
+        // Add error handling
+        window.addEventListener('error', function(event) {
+            log('GLOBAL ERROR: ' + event.error.message);
+            log('File: ' + event.filename + ':' + event.lineno);
+        });
+    </script>
+
+    <!-- Load all game scripts in correct order -->
+    <script src="js/utils/ObjectPool.js"></script>
+    <script src="js/engine/Entity.js"></script>
+    <script src="js/engine/Component.js"></script>
+    <script src="js/engine/System.js"></script>
+    <script src="js/components/PositionComponent.js"></script>
+    <script src="js/components/SpriteRenderer.js"></script>
+    <script src="js/components/MonsterComponent.js"></script>
+    <script src="js/components/EnemyComponent.js"></script>
+    <script src="js/components/ProjectileComponent.js"></script>
+    <script src="js/systems/PlacementSystem.js"></script>
+    <script src="js/systems/CombatSystem.js"></script>
+    <script src="js/systems/PathfindingSystem.js"></script>
+    <script src="js/systems/WaveSystem.js"></script>
+    <script src="js/systems/RenderSystem.js"></script>
+    <script src="js/systems/UISystem.js"></script>
+    <script src="js/systems/AudioSystem.js"></script>
+    <script src="js/systems/ParticleSystem.js"></script>
+    <script src="js/systems/TutorialSystem.js"></script>
+    <script src="js/utils/PerformanceMonitor.js"></script>
+    <script src="js/utils/SaveSystem.js"></script>
+    <script src="js/GameEngine.js"></script>
+</body>
+</html>

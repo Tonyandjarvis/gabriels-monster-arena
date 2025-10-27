@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabriel's Monster Arena - Direct Start</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #2c3e50;
+            color: white;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background: #34495e;
+        }
+        .game-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .button {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 2px;
+            font-size: 12px;
+        }
+        .button:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-info">
+        <div>Health: <span id="health">100</span></div>
+        <div>Currency: <span id="currency">200</span></div>
+        <div>Wave: <span id="wave">1</span></div>
+        <div>Score: <span id="score">0</span></div>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div class="controls">
+        <button class="button" onclick="startWave()">Start Wave</button>
+        <button class="button" onclick="addMonster('GEM')">Add GEM</button>
+        <button class="button" onclick="addMonster('BLOB')">Add BLOB</button>
+        <button class="button" onclick="addMonster('ANIMAL')">Add ANIMAL</button>
+        <button class="button" onclick="pauseGame()">Pause</button>
+    </div>
+
+    <script>
+        let gameEngine = null;
+        
+        // Initialize game immediately when page loads
+        window.addEventListener('load', function() {
+            console.log('Starting Gabriel\'s Monster Arena - Direct Start');
+            initializeGame();
+        });
+        
+        function initializeGame() {
+            try {
+                console.log('Creating GameEngine...');
+                gameEngine = new GameEngine();
+                
+                console.log('Initializing GameEngine...');
+                gameEngine.initialize();
+                
+                console.log('Starting GameEngine...');
+                gameEngine.start();
+                
+                console.log('Game started successfully!');
+                
+                // Start the first wave automatically
+                setTimeout(() => {
+                    startWave();
+                }, 1000);
+                
+                // Update UI periodically
+                setInterval(updateUI, 100);
+                
+            } catch (error) {
+                console.error('Failed to initialize game:', error);
+                alert('Game failed to start: ' + error.message);
+            }
+        }
+        
+        function startWave() {
+            if (gameEngine && gameEngine.waveSystem) {
+                try {
+                    gameEngine.waveSystem.startWave();
+                    console.log('Wave started');
+                } catch (error) {
+                    console.error('Failed to start wave:', error);
+                }
+            }
+        }
+        
+        function addMonster(type) {
+            if (gameEngine && gameEngine.placementSystem) {
+                try {
+                    // Create monster at center of screen
+                    const entity = new Entity();
+                    entity.addComponent(new PositionComponent(400, 300));
+                    entity.addComponent(new MonsterComponent(type, MonsterComponent.TYPES[type].stats));
+                    entity.addComponent(new SpriteRenderer(32, 32, MonsterComponent.TYPES[type].color));
+                    
+                    gameEngine.entities.set(entity.id, entity);
+                    gameEngine.syncEntityWithSystems(entity);
+                    
+                    console.log('Added ' + type + ' monster');
+                } catch (error) {
+                    console.error('Failed to add monster:', error);
+                }
+            }
+        }
+        
+        function pauseGame() {
+            if (gameEngine) {
+                gameEngine.isRunning = !gameEngine.isRunning;
+                console.log('Game ' + (gameEngine.isRunning ? 'resumed' : 'paused'));
+            }
+        }
+        
+        function updateUI() {
+            if (gameEngine && gameEngine.gameStats) {
+                document.getElementById('health').textContent = gameEngine.gameStats.health;
+                document.getElementById('currency').textContent = gameEngine.gameStats.currency;
+                document.getElementById('wave').textContent = gameEngine.gameStats.wave;
+                document.getElementById('score').textContent = gameEngine.gameStats.score;
+            }
+        }
+        
+        // Handle canvas clicks for monster placement
+        document.getElementById('gameCanvas').addEventListener('click', function(event) {
+            if (gameEngine && gameEngine.placementSystem) {
+                const rect = this.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                // Try to place a GEM monster at click location
+                addMonsterAtPosition('GEM', x, y);
+            }
+        });
+        
+        function addMonsterAtPosition(type, x, y) {
+            if (gameEngine) {
+                try {
+                    const entity = new Entity();
+                    entity.addComponent(new PositionComponent(x, y));
+                    entity.addComponent(new MonsterComponent(type, MonsterComponent.TYPES[type].stats));
+                    entity.addComponent(new SpriteRenderer(32, 32, MonsterComponent.TYPES[type].color));
+                    
+                    gameEngine.entities.set(entity.id, entity);
+                    gameEngine.syncEntityWithSystems(entity);
+                    
+                    console.log('Added ' + type + ' monster at (' + x + ', ' + y + ')');
+                } catch (error) {
+                    console.error('Failed to add monster at position:', error);
+                }
+            }
+        }
+    </script>
+
+    <!-- Load all game scripts -->
+    <script src="js/utils/ObjectPool.js"></script>
+    <script src="js/engine/Entity.js"></script>
+    <script src="js/engine/Component.js"></script>
+    <script src="js/engine/System.js"></script>
+    <script src="js/components/PositionComponent.js"></script>
+    <script src="js/components/SpriteRenderer.js"></script>
+    <script src="js/components/MonsterComponent.js"></script>
+    <script src="js/components/EnemyComponent.js"></script>
+    <script src="js/components/ProjectileComponent.js"></script>
+    <script src="js/systems/PlacementSystem.js"></script>
+    <script src="js/systems/CombatSystem.js"></script>
+    <script src="js/systems/PathfindingSystem.js"></script>
+    <script src="js/systems/WaveSystem.js"></script>
+    <script src="js/systems/RenderSystem.js"></script>
+    <script src="js/systems/UISystem.js"></script>
+    <script src="js/systems/AudioSystem.js"></script>
+    <script src="js/systems/ParticleSystem.js"></script>
+    <script src="js/systems/TutorialSystem.js"></script>
+    <script src="js/utils/PerformanceMonitor.js"></script>
+    <script src="js/utils/SaveSystem.js"></script>
+    <script src="js/GameEngine.js"></script>
+</body>
+</html>
