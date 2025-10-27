@@ -204,7 +204,8 @@ class GameEngine {
             this.combatSystem.setDependencies({
                 renderSystem: this.renderSystem,
                 particleSystem: this.particleSystem,
-                audioSystem: this.audioSystem
+                audioSystem: this.audioSystem,
+                gameEngine: this // Pass game engine reference
             });
             
             // Set wave system dependencies

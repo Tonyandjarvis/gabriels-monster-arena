@@ -25,6 +25,7 @@ class CombatSystem extends System {
             this.renderSystem = dependencies.renderSystem;
             this.particleSystem = dependencies.particleSystem;
             this.audioSystem = dependencies.audioSystem;
+            this.gameEngine = dependencies.gameEngine;
             console.log('CombatSystem dependencies set successfully');
         } catch (error) {
             console.error('Failed to set CombatSystem dependencies:', error);
@@ -130,7 +131,10 @@ class CombatSystem extends System {
         let nearestDistance = range;
         
         // Search through all entities with enemy tag
-        this.entities.forEach(entity => {
+        // Use GameEngine's entities if available, otherwise fall back to system entities
+        const entitiesToSearch = this.gameEngine ? this.gameEngine.entities : this.entities;
+        
+        entitiesToSearch.forEach(entity => {
             if (entity.hasTag('enemy')) {
                 const enemyPos = entity.getComponent('PositionComponent');
                 const enemyComp = entity.getComponent('EnemyComponent');
