@@ -130,7 +130,13 @@ class CombatSystem extends System {
         
         // Attack if target is in range and cooldown is ready
         if (monsterComp.target && this.isTargetInRange(pos, monsterComp.target, monsterComp.stats.range)) {
-            if (monsterComp.canAttack()) {
+            const canAttack = monsterComp.canAttack();
+            const timeSinceLastAttack = Date.now() - monsterComp.lastAttack;
+            const cooldown = monsterComp.attackCooldown;
+            
+            console.log(`Monster ${monster.id} attack check: canAttack=${canAttack}, timeSince=${timeSinceLastAttack}, cooldown=${cooldown}`);
+            
+            if (canAttack) {
                 console.log(`Monster ${monster.id} attacking enemy ${monsterComp.target.id}`);
                 this.performAttack(monster, monsterComp, pos);
             }

@@ -884,9 +884,32 @@ class GameEngine {
         const allEvents = [...waveEvents, ...pathfindingEvents, ...combatEvents];
         
         allEvents.forEach(event => {
-            // Emit events through the event system
-            this.emitEvent(event.type, event);
+            // Process combat events directly instead of going through event system
+            this.processCombatEvent(event);
         });
+    }
+    
+    processCombatEvent(event) {
+        try {
+            switch (event.type) {
+                case 'enemy_died':
+                    this.handleEnemyDeath(event);
+                    break;
+                case 'enemy_reached_end':
+                    this.handleEnemyReachedEnd(event);
+                    break;
+                case 'hit':
+                    // Handle hit events if needed
+                    break;
+                case 'enemy_spawned':
+                    // Handle spawn events if needed
+                    break;
+                default:
+                    console.log(`Unhandled combat event: ${event.type}`);
+            }
+        } catch (error) {
+            console.error(`Error processing combat event ${event.type}:`, error);
+        }
     }
 
     handleEnemyDeath(event) {
