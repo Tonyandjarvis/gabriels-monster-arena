@@ -313,6 +313,9 @@ class CombatSystem extends System {
                 enemy: target,
                 reward: enemyComp.getReward()
             });
+            
+            // Don't destroy the enemy here - let the death event handler do it
+            // This prevents multiple projectiles from hitting the same enemy
         }
         
         // Give experience to the monster that fired the projectile

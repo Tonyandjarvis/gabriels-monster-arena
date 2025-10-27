@@ -493,17 +493,23 @@ class GameEngine {
                 const monster = this.placementSystem.placeMonster(x, y, monsterType);
                 if (monster) {
                     console.log('Monster placed successfully!', monster);
-                    this.uiSystem.spendCurrency(cost);
                     
-                    if (this.addEntity(monster)) {
-                        this.audioSystem.playSound('monster_place');
-                        this.placementSystem.exitPlacementMode();
-                        this.uiSystem.exitPlacementMode();
-                        this.tutorialSystem.completeAction('place_monster');
+                    // Spend currency and check if successful
+                    if (this.uiSystem.spendCurrency(cost)) {
+                        console.log(`Currency spent: ${cost}, remaining: ${this.uiSystem.getGameStats().currency}`);
+                        
+                        if (this.addEntity(monster)) {
+                            this.audioSystem.playSound('monster_place');
+                            this.placementSystem.exitPlacementMode();
+                            this.uiSystem.exitPlacementMode();
+                            this.tutorialSystem.completeAction('place_monster');
+                        } else {
+                            console.error('Failed to add monster to game engine');
+                            // Refund currency if entity addition failed
+                            this.uiSystem.addCurrency(cost);
+                        }
                     } else {
-                        console.error('Failed to add monster to game engine');
-                        // Refund currency if entity addition failed
-                        this.uiSystem.addCurrency(cost);
+                        console.error('Failed to spend currency');
                     }
                 } else {
                     console.log('Monster placement failed - invalid position');
@@ -913,6 +919,7 @@ class GameEngine {
     }
 
     handleEnemyDeath(event) {
+        console.log(`Enemy ${event.enemy.id} died, awarding ${event.reward} currency`);
         this.uiSystem.addCurrency(event.reward);
         this.uiSystem.addScore(event.reward * 10);
         this.audioSystem.playSound('enemy_die');
@@ -923,6 +930,11 @@ class GameEngine {
         this.particleSystem.createExplosion(enemyPos.x + 16, enemyPos.y + 16, '#ff6b6b', 6);
         
         this.waveSystem.onEnemyDied(event.enemy);
+        
+        // Destroy the enemy entity
+        event.enemy.destroy();
+        this.entities.delete(event.enemy.id);
+        console.log(`Enemy ${event.enemy.id} destroyed and removed from game`);
     }
 
     handleWaveCompleted(event) {
