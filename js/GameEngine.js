@@ -211,7 +211,8 @@ class GameEngine {
             this.waveSystem.setDependencies({
                 pathfindingSystem: this.pathfindingSystem,
                 renderSystem: this.renderSystem,
-                combatSystem: this.combatSystem
+                combatSystem: this.combatSystem,
+                gameEngine: this // Pass game engine reference
             });
             
             // Set placement system dependencies

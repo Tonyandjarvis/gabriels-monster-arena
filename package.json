@@ -42,15 +42,11 @@
     "eslint": "^8.53.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^27.0.1",
     "prettier": "^3.0.0",
     "webpack": "^5.89.0",
     "webpack-bundle-analyzer": "^4.9.0",
     "webpack-cli": "^5.1.0"
-  },
-  "dependencies": {},
-  "jest": {
-    "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"]
   },
   "browserslist": [
     "> 1%",

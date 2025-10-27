@@ -45,6 +45,11 @@ class TutorialSystem extends System {
         this.stepStartTime = 0;
     }
 
+    setDependencies(dependencies) {
+        // TutorialSystem doesn't need external dependencies
+        console.log('TutorialSystem dependencies set (none required)');
+    }
+
     startTutorial() {
         this.tutorialActive = true;
         this.currentStep = 0;

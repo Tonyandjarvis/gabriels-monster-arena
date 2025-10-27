@@ -26,6 +26,7 @@ class WaveSystem extends System {
             this.pathfindingSystem = dependencies.pathfindingSystem;
             this.renderSystem = dependencies.renderSystem;
             this.combatSystem = dependencies.combatSystem;
+            this.gameEngine = dependencies.gameEngine; // Add game engine reference
             console.log('WaveSystem dependencies set successfully');
         } catch (error) {
             console.error('Failed to set WaveSystem dependencies:', error);
@@ -216,6 +217,12 @@ class WaveSystem extends System {
         this.entities.add(entity);
         this.enemiesSpawned++;
         this.enemiesAlive++;
+
+        // Also add to main game engine if available
+        if (this.gameEngine) {
+            this.gameEngine.entities.set(entity.id, entity);
+            this.gameEngine.syncEntityWithSystems(entity);
+        }
 
         console.log(`Spawned ${enemyType} enemy (${this.enemiesSpawned}/${this.enemiesInWave}) at (${this.spawnPosition.x}, ${this.spawnPosition.y})`);
 

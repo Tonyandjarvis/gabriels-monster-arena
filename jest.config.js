@@ -11,6 +11,9 @@ module.exports = {
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   
+  // Global setup to load all game scripts
+  setupFiles: ['<rootDir>/tests/global-setup.js'],
+  
   // Coverage configuration
   collectCoverage: true,
   coverageDirectory: 'coverage',
@@ -26,7 +29,7 @@ module.exports = {
   
   // Module paths
   moduleDirectories: ['node_modules', 'js'],
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/js/$1',
     '^@tests/(.*)$': '<rootDir>/tests/$1'
   },
@@ -48,12 +51,9 @@ module.exports = {
   // Restore mocks after each test
   restoreMocks: true,
   
-  // Test results processor
-  testResultsProcessor: '<rootDir>/tests/utils/test-results-processor.js',
-  
-  // Global setup and teardown
-  globalSetup: '<rootDir>/tests/utils/global-setup.js',
-  globalTeardown: '<rootDir>/tests/utils/global-teardown.js',
+  // Global setup and teardown (optional)
+  // globalSetup: '<rootDir>/tests/utils/global-setup.js',
+  // globalTeardown: '<rootDir>/tests/utils/global-teardown.js',
   
   // Test environment options
   testEnvironmentOptions: {
@@ -80,3 +80,5 @@ module.exports = {
     '/package.json'
   ]
 };
+
+

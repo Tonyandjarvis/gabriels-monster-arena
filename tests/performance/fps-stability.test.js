@@ -358,3 +358,5 @@ function generatePerformanceReport(data) {
     totalTime: frameTimes.reduce((a, b) => a + b, 0)
   };
 }
+
+

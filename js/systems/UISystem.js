@@ -28,6 +28,11 @@ class UISystem extends System {
         console.log('🎨 UISystem constructor complete. Will initialize on first render.');
     }
 
+    setDependencies(dependencies) {
+        // UISystem doesn't need external dependencies
+        console.log('UISystem dependencies set (none required)');
+    }
+
     setupUI() {
         console.log('🎨 setupUI called');
         try {

@@ -8,6 +8,11 @@ class ParticleSystem extends System {
         );
     }
 
+    setDependencies(dependencies) {
+        // ParticleSystem doesn't need external dependencies
+        console.log('ParticleSystem dependencies set (none required)');
+    }
+
     createParticle() {
         return {
             x: 0,

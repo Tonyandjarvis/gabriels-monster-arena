@@ -288,9 +288,6 @@ beforeEach(() => {
   // Reset global state
   global.window.localStorage.clear();
   global.window.sessionStorage.clear();
-  
-  // Reset performance.now
-  global.performance.now.mockReturnValue(Date.now());
 });
 
 afterEach(() => {
@@ -342,3 +339,5 @@ global.TestUtils = {
 };
 
 console.log('Test setup completed successfully');
+
+

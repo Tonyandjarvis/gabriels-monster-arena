@@ -11,6 +11,11 @@ class AudioSystem extends System {
         this.initializeAudio();
     }
 
+    setDependencies(dependencies) {
+        // AudioSystem doesn't need external dependencies
+        console.log('AudioSystem dependencies set (none required)');
+    }
+
     initializeAudio() {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();

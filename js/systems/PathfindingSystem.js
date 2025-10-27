@@ -9,6 +9,11 @@ class PathfindingSystem extends System {
         this.combatEvents = [];
     }
 
+    setDependencies(dependencies) {
+        // PathfindingSystem doesn't need external dependencies
+        console.log('PathfindingSystem dependencies set (none required)');
+    }
+
     generatePath(start, end, obstacles = []) {
         // Simple path generation for MVP
         // Can be upgraded to A* algorithm later

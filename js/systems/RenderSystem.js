@@ -18,6 +18,12 @@ class RenderSystem extends System {
         this.background = backgroundImage;
     }
 
+    setDependencies(dependencies) {
+        // RenderSystem doesn't need external dependencies
+        // All dependencies are set via direct assignment in GameEngine
+        console.log('RenderSystem dependencies set (none required)');
+    }
+
     update(deltaTime) {
         // Update animations and effects
         this.entities.forEach(entity => {
