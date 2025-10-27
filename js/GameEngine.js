@@ -221,6 +221,14 @@ class GameEngine {
                 pathfindingSystem: this.pathfindingSystem
             });
             
+            // Set dependencies for all other systems (even if they don't need external dependencies)
+            this.renderSystem.setDependencies({});
+            this.pathfindingSystem.setDependencies({});
+            this.uiSystem.setDependencies({});
+            this.audioSystem.setDependencies({});
+            this.particleSystem.setDependencies({});
+            this.tutorialSystem.setDependencies({});
+            
             console.log('System dependencies configured successfully');
         } catch (error) {
             console.error('Failed to setup system dependencies:', error);
