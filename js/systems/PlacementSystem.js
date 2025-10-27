@@ -119,10 +119,17 @@ class PlacementSystem extends System {
         const worldPos = this.gridToWorld(gridX, gridY);
         const tolerance = this.gridSize * 0.8; // Allow placement closer to path
         
-        for (let i = 0; i < this.path.length - 1; i++) {
+        // Get path from pathfinding system if available
+        const path = this.pathfindingSystem ? this.pathfindingSystem.getPath() : this.path;
+        
+        if (!path || path.length < 2) {
+            return false; // No path to check against
+        }
+        
+        for (let i = 0; i < path.length - 1; i++) {
             const segment = {
-                start: this.path[i],
-                end: this.path[i + 1]
+                start: path[i],
+                end: path[i + 1]
             };
             
             if (this.pointOnSegment(worldPos, segment, tolerance)) {

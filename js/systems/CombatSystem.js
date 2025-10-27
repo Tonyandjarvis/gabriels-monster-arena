@@ -111,13 +111,16 @@ class CombatSystem extends System {
             monsterComp.target = this.findNearestEnemy(pos, monsterComp.stats.range);
             monsterComp.lastTargetTime = Date.now();
             if (monsterComp.target) {
-                console.log(`Monster ${monster.id} targeting enemy ${monsterComp.target.id}`);
+                console.log(`Monster ${monster.id} targeting enemy ${monsterComp.target.id} at range ${monsterComp.stats.range}`);
+            } else {
+                console.log(`Monster ${monster.id} found no enemies in range ${monsterComp.stats.range}`);
             }
         }
         
         // Attack if target is in range and cooldown is ready
         if (monsterComp.target && this.isTargetInRange(pos, monsterComp.target, monsterComp.stats.range)) {
             if (monsterComp.canAttack()) {
+                console.log(`Monster ${monster.id} attacking enemy ${monsterComp.target.id}`);
                 this.performAttack(monster, monsterComp, pos);
             }
         }
@@ -203,13 +206,16 @@ class CombatSystem extends System {
             // Move projectile towards target
             if (projectileComp.target) {
                 const targetPos = projectileComp.target.getComponent('PositionComponent');
-                if (targetPos && !projectileComp.target.getComponent('EnemyComponent').isDead()) {
+                const enemyComp = projectileComp.target.getComponent('EnemyComponent');
+                
+                if (targetPos && enemyComp && !enemyComp.isDead()) {
                     const dx = targetPos.x - pos.x;
                     const dy = targetPos.y - pos.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     
-                    if (distance < 10) {
+                    if (distance < 15) { // Increased hit detection radius
                         // Hit target
+                        console.log(`Projectile hit enemy at distance ${distance}`);
                         this.hitTarget(projectile, projectileComp);
                         this.projectilePool.release(projectile);
                         this.projectiles.splice(i, 1);
@@ -221,11 +227,13 @@ class CombatSystem extends System {
                     }
                 } else {
                     // Target is dead or invalid
+                    console.log('Projectile target is dead or invalid, removing projectile');
                     this.projectilePool.release(projectile);
                     this.projectiles.splice(i, 1);
                 }
             } else {
                 // No target
+                console.log('Projectile has no target, removing');
                 this.projectilePool.release(projectile);
                 this.projectiles.splice(i, 1);
             }
@@ -233,7 +241,8 @@ class CombatSystem extends System {
     }
 
     hitTarget(projectile, projectileComp) {
-        if (!projectileComp.target || !projectileComp.hitTarget(projectileComp.target)) {
+        if (!projectileComp.target) {
+            console.log('HitTarget: No target specified');
             return;
         }
         
@@ -241,49 +250,67 @@ class CombatSystem extends System {
         const enemyComp = target.getComponent('EnemyComponent');
         const targetPos = target.getComponent('PositionComponent');
         
-        if (enemyComp && targetPos) {
-            const damage = projectileComp.damage;
-            const died = enemyComp.takeDamage(damage);
-            
-            // Create damage number
-            const damageNumber = this.damageNumberPool.acquire();
-            damageNumber.x = targetPos.x;
-            damageNumber.y = targetPos.y;
-            damageNumber.damage = damage;
-            damageNumber.color = died ? '#ff0000' : '#ffff00';
-            this.damageNumbers.push(damageNumber);
-            
-            // Add combat event
+        if (!enemyComp || !targetPos) {
+            console.log('HitTarget: Target missing EnemyComponent or PositionComponent');
+            return;
+        }
+        
+        if (enemyComp.isDead()) {
+            console.log('HitTarget: Target is already dead');
+            return;
+        }
+        
+        // Check if projectile can hit this target
+        if (!projectileComp.hitTarget(target)) {
+            console.log('HitTarget: Projectile cannot hit this target');
+            return;
+        }
+        
+        const damage = projectileComp.damage;
+        console.log(`HitTarget: Dealing ${damage} damage to enemy ${target.id}`);
+        
+        const died = enemyComp.takeDamage(damage);
+        console.log(`HitTarget: Enemy ${died ? 'died' : 'survived'} (health: ${enemyComp.stats.health}/${enemyComp.stats.maxHealth})`);
+        
+        // Create damage number
+        const damageNumber = this.damageNumberPool.acquire();
+        damageNumber.x = targetPos.x;
+        damageNumber.y = targetPos.y;
+        damageNumber.damage = damage;
+        damageNumber.color = died ? '#ff0000' : '#ffff00';
+        this.damageNumbers.push(damageNumber);
+        
+        // Add combat event
+        this.combatEvents.push({
+            type: 'hit',
+            target: target,
+            damage: damage,
+            died: died
+        });
+        
+        // If enemy died, add death event
+        if (died) {
+            console.log(`HitTarget: Enemy ${target.id} died, adding death event`);
             this.combatEvents.push({
-                type: 'hit',
-                target: target,
-                damage: damage,
-                died: died
+                type: 'enemy_died',
+                enemy: target,
+                reward: enemyComp.getReward()
             });
-            
-            // If enemy died, add death event
-            if (died) {
-                this.combatEvents.push({
-                    type: 'enemy_died',
-                    enemy: target,
-                    reward: enemyComp.getReward()
-                });
-            }
-            
-            // Give experience to the monster that fired the projectile
-            if (died && projectileComp.sourceMonster) {
-                const monsterComp = projectileComp.sourceMonster.getComponent('MonsterComponent');
-                if (monsterComp) {
-                    const expGained = enemyComp.getReward() / 2; // Half the reward as experience
-                    const leveledUp = monsterComp.addExperience(expGained);
-                    
-                    if (leveledUp) {
-                        this.combatEvents.push({
-                            type: 'monster_leveled_up',
-                            monster: projectileComp.sourceMonster,
-                            newLevel: monsterComp.level
-                        });
-                    }
+        }
+        
+        // Give experience to the monster that fired the projectile
+        if (died && projectileComp.sourceMonster) {
+            const monsterComp = projectileComp.sourceMonster.getComponent('MonsterComponent');
+            if (monsterComp) {
+                const expGained = enemyComp.getReward() / 2; // Half the reward as experience
+                const leveledUp = monsterComp.addExperience(expGained);
+                
+                if (leveledUp) {
+                    this.combatEvents.push({
+                        type: 'monster_leveled_up',
+                        monster: projectileComp.sourceMonster,
+                        newLevel: monsterComp.level
+                    });
                 }
             }
         }
