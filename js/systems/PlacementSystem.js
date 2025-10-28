@@ -56,12 +56,15 @@ class PlacementSystem extends System {
     placeMonster(x, y, monsterType) {
         const gridPos = this.worldToGrid(x, y);
         const key = `${gridPos.x},${gridPos.y}`;
-        
+        console.log(`Attempting to place monster at world (${x}, ${y}) -> grid (${gridPos.x}, ${gridPos.y})`);
+
         if (this.isValidPlacement(gridPos.x, gridPos.y)) {
             const monster = this.createMonster(gridPos.x, gridPos.y, monsterType);
             this.grid.set(key, monster);
+            console.log(`Monster placed successfully at grid (${gridPos.x}, ${gridPos.y})`);
             return monster;
         }
+        console.log(`Monster placement failed at grid (${gridPos.x}, ${gridPos.y})`);
         return null;
     }
 
@@ -132,8 +135,10 @@ class PlacementSystem extends System {
 
         // Get path from pathfinding system if available
         const path = this.pathfindingSystem ? this.pathfindingSystem.getPath() : this.path;
+        console.log(`Path check: path=${path ? path.length : 'null'} points, tolerance=${tolerance}`);
 
         if (!path || path.length < 2) {
+            console.log('No path to check against - allowing placement');
             return false; // No path to check against
         }
 
