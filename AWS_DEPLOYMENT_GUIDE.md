@@ -214,3 +214,6 @@ sudo nano /etc/nginx/nginx.conf
 3. **No Node.js, no npm, no dependencies!**
 
 The game runs entirely in the browser, so AWS just needs to serve the files. All the npm dependencies are for development and testing only.
+
+
+

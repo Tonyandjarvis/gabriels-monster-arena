@@ -67,3 +67,6 @@ else
 fi
 
 echo "✅ AWS deployment preparation complete!"
+
+
+

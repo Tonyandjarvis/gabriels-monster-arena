@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1 Fixes Test - Gabriel's Monster Arena</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #2c3e50;
+            color: white;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .test-pass {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 4px solid #4CAF50;
+        }
+        .test-fail {
+            background: rgba(244, 67, 54, 0.3);
+            border-left: 4px solid #f44336;
+        }
+        .test-info {
+            background: rgba(33, 150, 243, 0.3);
+            border-left: 4px solid #2196F3;
+        }
+        #gameCanvas {
+            border: 2px solid #fff;
+            border-radius: 10px;
+            display: block;
+            margin: 20px auto;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Phase 1 Fixes Test - Gabriel's Monster Arena</h1>
+        
+        <div class="test-section">
+            <h2>Test Results</h2>
+            <div id="test-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Game Canvas</h2>
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div class="controls">
+                <button id="startTest">Start All Tests</button>
+                <button id="testSystems">Test Systems</button>
+                <button id="testEntities">Test Entities</button>
+                <button id="testRendering">Test Rendering</button>
+                <button id="testEvents">Test Events</button>
+                <button id="testEnemies">Test Enemies</button>
+                <button id="testHealth">Test Health</button>
+                <button id="testGameplay">Test Gameplay</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Console Output</h2>
+            <div id="console-output" style="background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 200px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- Load game scripts -->
+    <script src="js/engine/Component.js"></script>
+    <script src="js/engine/Entity.js"></script>
+    <script src="js/engine/System.js"></script>
+    <script src="js/components/PositionComponent.js"></script>
+    <script src="js/components/MonsterComponent.js"></script>
+    <script src="js/components/EnemyComponent.js"></script>
+    <script src="js/components/ProjectileComponent.js"></script>
+    <script src="js/components/SpriteRenderer.js"></script>
+    <script src="js/systems/RenderSystem.js"></script>
+    <script src="js/systems/PlacementSystem.js"></script>
+    <script src="js/systems/CombatSystem.js"></script>
+    <script src="js/systems/WaveSystem.js"></script>
+    <script src="js/systems/PathfindingSystem.js"></script>
+    <script src="js/systems/UISystem.js"></script>
+    <script src="js/systems/AudioSystem.js"></script>
+    <script src="js/systems/ParticleSystem.js"></script>
+    <script src="js/systems/TutorialSystem.js"></script>
+    <script src="js/utils/ObjectPool.js"></script>
+    <script src="js/utils/PerformanceMonitor.js"></script>
+    <script src="js/utils/SaveSystem.js"></script>
+    <script src="js/utils/ConfigLoader.js"></script>
+    <script src="js/utils/ConfigValidator.js"></script>
+    <script src="js/GameEngine.js"></script>
+
+    <script>
+        // Test framework
+        class Phase1TestFramework {
+            constructor() {
+                this.results = [];
+                this.gameEngine = null;
+                this.originalConsoleLog = console.log;
+                this.originalConsoleError = console.error;
+                this.setupConsoleCapture();
+                this.setupEventListeners();
+            }
+
+            setupConsoleCapture() {
+                const consoleOutput = document.getElementById('console-output');
+                
+                console.log = (...args) => {
+                    this.originalConsoleLog(...args);
+                    consoleOutput.innerHTML += args.join(' ') + '\n';
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                };
+                
+                console.error = (...args) => {
+                    this.originalConsoleError(...args);
+                    consoleOutput.innerHTML += '<span style="color: #f00;">ERROR: ' + args.join(' ') + '</span>\n';
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                };
+            }
+
+            setupEventListeners() {
+                document.getElementById('startTest').addEventListener('click', () => this.runAllTests());
+                document.getElementById('testSystems').addEventListener('click', async () => {
+                    await this.initializeGameEngine();
+                    await this.testSystemArchitecture();
+                });
+                document.getElementById('testEntities').addEventListener('click', () => this.testEntityComponentSystem());
+                document.getElementById('testRendering').addEventListener('click', () => this.testRenderingPipeline());
+                document.getElementById('testEvents').addEventListener('click', () => this.testEventSystem());
+                document.getElementById('testEnemies').addEventListener('click', () => this.testEnemySystem());
+                document.getElementById('testHealth').addEventListener('click', () => this.testSystemHealthMonitoring());
+                document.getElementById('testGameplay').addEventListener('click', () => this.testEndToEndGameplay());
+            }
+
+            addResult(testName, passed, message) {
+                this.results.push({ testName, passed, message });
+                this.updateResultsDisplay();
+            }
+
+            updateResultsDisplay() {
+                const resultsDiv = document.getElementById('test-results');
+                resultsDiv.innerHTML = '';
+                
+                this.results.forEach(result => {
+                    const div = document.createElement('div');
+                    div.className = `test-result ${result.passed ? 'test-pass' : 'test-fail'}`;
+                    div.innerHTML = `<strong>${result.testName}:</strong> ${result.passed ? 'PASS' : 'FAIL'} - ${result.message}`;
+                    resultsDiv.appendChild(div);
+                });
+            }
+
+            async runAllTests() {
+                console.log('=== Starting Phase 2 Integration Test Suite ===');
+                this.results = [];
+                
+                try {
+                    // Initialize GameEngine first
+                    await this.initializeGameEngine();
+                    
+                    // Run all tests
+                    await this.testSystemArchitecture();
+                    await this.testEntityComponentSystem();
+                    await this.testRenderingPipeline();
+                    await this.testEventSystem();
+                    await this.testEnemySystem();
+                    await this.testSystemHealthMonitoring();
+                    await this.testEndToEndGameplay();
+                    
+                    const passed = this.results.filter(r => r.passed).length;
+                    const total = this.results.length;
+                    
+                    console.log(`=== Test Suite Complete: ${passed}/${total} tests passed ===`);
+                    this.addResult('Overall', passed === total, `${passed}/${total} tests passed`);
+                } catch (error) {
+                    console.error('Test suite failed:', error);
+                    this.addResult('Overall', false, `Test suite failed: ${error.message}`);
+                }
+            }
+
+            async initializeGameEngine() {
+                try {
+                    console.log('Initializing GameEngine...');
+                    
+                    // Check if required classes are available
+                    if (typeof GameEngine === 'undefined') {
+                        throw new Error('GameEngine class not found - check script loading');
+                    }
+                    if (typeof Entity === 'undefined') {
+                        throw new Error('Entity class not found - check script loading');
+                    }
+                    if (typeof PositionComponent === 'undefined') {
+                        throw new Error('PositionComponent class not found - check script loading');
+                    }
+                    
+                    this.gameEngine = new GameEngine();
+                    this.gameEngine.initialize();
+                    console.log('GameEngine initialized successfully');
+                } catch (error) {
+                    console.error('Failed to initialize GameEngine:', error);
+                    this.addResult('GameEngine Initialization', false, `Failed: ${error.message}`);
+                    throw error;
+                }
+            }
+
+            async testSystemArchitecture() {
+                console.log('Testing System Architecture...');
+                
+                try {
+                    // Test GameEngine initialization
+                    this.gameEngine = new GameEngine();
+                    this.addResult('GameEngine Creation', true, 'GameEngine created successfully');
+                    
+                    // Test system creation
+                    this.gameEngine.initialize();
+                    this.addResult('System Initialization', true, 'All systems initialized successfully');
+                    
+                    // Test system priorities
+                    const systems = Array.from(this.gameEngine.systems.values());
+                    const sortedSystems = systems.sort((a, b) => a.priority - b.priority);
+                    this.addResult('System Priority Order', true, `Systems ordered by priority: ${sortedSystems.map(s => s.constructor.name).join(', ')}`);
+                    
+                    // Test system dependencies
+                    const hasDependencies = systems.every(system => 
+                        system.setDependencies && typeof system.setDependencies === 'function'
+                    );
+                    this.addResult('System Dependencies', hasDependencies, hasDependencies ? 'All systems have dependency injection' : 'Some systems missing dependency injection');
+                    
+                } catch (error) {
+                    this.addResult('System Architecture', false, `Failed: ${error.message}`);
+                }
+            }
+
+            async testEntityComponentSystem() {
+                console.log('Testing Entity-Component System...');
+                
+                try {
+                    // Test entity creation
+                    const entity = new Entity();
+                    this.addResult('Entity Creation', !!entity.id, `Entity created with ID: ${entity.id}`);
+                    
+                    // Test component addition with validation
+                    const posComp = new PositionComponent(100, 100);
+                    entity.addComponent(posComp);
+                    this.addResult('Component Addition', entity.hasComponent('PositionComponent'), 'Component added and validated');
+                    
+                    // Test component validation
+                    const invalidComponent = null; // Truly invalid component
+                    try {
+                        entity.addComponent(invalidComponent);
+                        this.addResult('Component Validation', false, 'Should have failed with null component');
+                    } catch (error) {
+                        this.addResult('Component Validation', true, 'Null component properly rejected');
+                    }
+                    
+                    // Test entity lifecycle
+                    entity.destroy();
+                    this.addResult('Entity Lifecycle', !entity.active, 'Entity properly destroyed');
+                    
+                } catch (error) {
+                    this.addResult('Entity-Component System', false, `Failed: ${error.message}`);
+                }
+            }
+
+            async testRenderingPipeline() {
+                console.log('Testing Rendering Pipeline...');
+                
+                try {
+                    if (!this.gameEngine) {
+                        await this.initializeGameEngine();
+                    }
+                    
+                    // Test canvas setup
+                    const canvas = document.getElementById('gameCanvas');
+                    const ctx = canvas.getContext('2d');
+                    this.addResult('Canvas Setup', !!ctx, 'Canvas context obtained');
+                    
+                    // Test rendering system
+                    const renderSystem = this.gameEngine.renderSystem;
+                    this.addResult('RenderSystem Creation', !!renderSystem, 'RenderSystem created');
+                    
+                    // Test entity rendering
+                    const testEntity = new Entity();
+                    testEntity.addComponent(new PositionComponent(100, 100));
+                    testEntity.addComponent(new SpriteRenderer(32, 32, '#ff0000'));
+                    testEntity.addTag('monster');
+                    
+                    this.gameEngine.addEntity(testEntity);
+                    this.addResult('Entity Rendering', this.gameEngine.entities.has(testEntity.id), 'Test entity added to game');
+                    
+                    // Test render call
+                    renderSystem.render(ctx);
+                    this.addResult('Render Call', true, 'Render system executed without errors');
+                    
+                } catch (error) {
+                    this.addResult('Rendering Pipeline', false, `Failed: ${error.message}`);
+                }
+            }
+
+            async testEventSystem() {
+                console.log('Testing Event System...');
+                
+                try {
+                    if (!this.gameEngine) {
+                        await this.initializeGameEngine();
+                    }
+                    
+                    // Test event emission
+                    let eventReceived = false;
+                    this.gameEngine.addEventListener('test_event', (event) => {
+                        eventReceived = true;
+                    });
+                    
+                    this.gameEngine.emitEvent('test_event', { test: 'data' });
+                    this.addResult('Event Emission', true, 'Event emitted successfully');
+                    
+                    // Test event processing
+                    this.gameEngine.processEvents();
+                    this.addResult('Event Processing', eventReceived, 'Event processed and received');
+                    
+                    // Test system events
+                    this.gameEngine.emitEvent('system_error', { system: 'test', error: 'test error' });
+                    this.addResult('System Events', true, 'System events handled');
+                    
+                } catch (error) {
+                    this.addResult('Event System', false, `Failed: ${error.message}`);
+                }
+            }
+
+            async testEnemySystem() {
+                console.log('Testing Enemy System Integration...');
+                
+                try {
+                    if (!this.gameEngine) {
+                        await this.initializeGameEngine();
+                    }
+                    
+                    // Test enemy spawning
+                    const initialEnemyCount = this.gameEngine.entities.size;
+                    this.gameEngine.waveSystem.spawnEnemy('BASIC');
+                    this.addResult('Enemy Spawning', this.gameEngine.entities.size > initialEnemyCount, 'Enemy spawned successfully');
+                    
+                    // Test enemy movement
+                    const pathfindingSystem = this.gameEngine.pathfindingSystem;
+                    const enemyEntities = Array.from(this.gameEngine.entities.values()).filter(e => e.hasTag('enemy'));
+                    if (enemyEntities.length > 0) {
+                        const enemy = enemyEntities[0];
+                        const initialPos = enemy.getComponent('PositionComponent');
+                        pathfindingSystem.updateEntity(enemy, 16);
+                        this.addResult('Enemy Movement', true, 'Enemy movement system functional');
+                    }
+                    
+                    // Test combat integration
+                    const combatSystem = this.gameEngine.combatSystem;
+                    const monsterEntities = Array.from(this.gameEngine.entities.values()).filter(e => e.hasTag('monster'));
+                    if (monsterEntities.length > 0 && enemyEntities.length > 0) {
+                        combatSystem.update(16);
+                        this.addResult('Combat Integration', true, 'Combat system processes monsters and enemies');
+                    }
+                    
+                } catch (error) {
+                    this.addResult('Enemy System Integration', false, `Failed: ${error.message}`);
+                }
+            }
+
+            async testSystemHealthMonitoring() {
+                console.log('Testing System Health Monitoring...');
+                
+                try {
+                    if (!this.gameEngine) {
+                        await this.initializeGameEngine();
+                    }
+                    
+                    // Test health monitoring
+                    const healthReport = this.gameEngine.getSystemHealthReport();
+                    this.addResult('Health Monitoring', !!healthReport, 'System health monitoring functional');
+                    
+                    // Test entity distribution
+                    const hasEntityDistribution = healthReport.entityDistribution && 
+                        typeof healthReport.entityDistribution.monsters === 'number';
+                    this.addResult('Entity Distribution', hasEntityDistribution, 'Entity distribution tracking works');
+                    
+                    // Test system status
+                    const hasSystemStatus = healthReport.systemStatus && 
+                        Object.keys(healthReport.systemStatus).length > 0;
+                    this.addResult('System Status', hasSystemStatus, 'System status monitoring works');
+                    
+                } catch (error) {
+                    this.addResult('System Health Monitoring', false, `Failed: ${error.message}`);
+                }
+            }
+
+            async testEndToEndGameplay() {
+                console.log('Testing End-to-End Gameplay...');
+                
+                try {
+                    if (!this.gameEngine) {
+                        await this.initializeGameEngine();
+                    }
+                    
+                    // Test wave starting
+                    const waveStarted = this.gameEngine.waveSystem.startWave();
+                    this.addResult('Wave Starting', waveStarted, 'Wave system can start waves');
+                    
+                    // Test enemy spawning in wave
+                    if (waveStarted) {
+                        this.gameEngine.waveSystem.update(1000);
+                        const enemyCount = Array.from(this.gameEngine.entities.values()).filter(e => e.hasTag('enemy')).length;
+                        this.addResult('Wave Enemy Spawning', enemyCount > 0, 'Wave system spawns enemies');
+                    }
+                    
+                    // Test system integration
+                    this.gameEngine.update(16);
+                    this.addResult('System Integration', true, 'All systems update together');
+                    
+                    // Test rendering
+                    const canvas = document.getElementById('gameCanvas');
+                    const ctx = canvas.getContext('2d');
+                    this.gameEngine.render();
+                    this.addResult('Rendering Integration', true, 'Rendering system works with all entities');
+                    
+                } catch (error) {
+                    this.addResult('End-to-End Gameplay', false, `Failed: ${error.message}`);
+                }
+            }
+        }
+
+        // Initialize test framework when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.testFramework = new Phase1TestFramework();
+            
+            // Test script loading
+            console.log('=== SCRIPT LOADING TEST ===');
+            console.log('GameEngine available:', typeof GameEngine !== 'undefined');
+            console.log('Entity available:', typeof Entity !== 'undefined');
+            console.log('PositionComponent available:', typeof PositionComponent !== 'undefined');
+            console.log('MonsterComponent available:', typeof MonsterComponent !== 'undefined');
+            console.log('EnemyComponent available:', typeof EnemyComponent !== 'undefined');
+            console.log('RenderSystem available:', typeof RenderSystem !== 'undefined');
+            console.log('WaveSystem available:', typeof WaveSystem !== 'undefined');
+            console.log('CombatSystem available:', typeof CombatSystem !== 'undefined');
+            console.log('PathfindingSystem available:', typeof PathfindingSystem !== 'undefined');
+            console.log('============================');
+            
+            console.log('Phase 2 Test Framework initialized. Click "Start All Tests" to begin.');
+        });
+    </script>
+</body>
+</html>

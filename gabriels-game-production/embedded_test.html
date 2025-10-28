@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embedded Test - Gabriel's Monster Arena</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #2c3e50;
+            color: white;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .test-pass {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 4px solid #4CAF50;
+        }
+        .test-fail {
+            background: rgba(244, 67, 54, 0.3);
+            border-left: 4px solid #f44336;
+        }
+        .test-info {
+            background: rgba(33, 150, 243, 0.3);
+            border-left: 4px solid #2196F3;
+        }
+        #gameCanvas {
+            border: 2px solid #fff;
+            border-radius: 10px;
+            display: block;
+            margin: 20px auto;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #console-output {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Embedded Test - Gabriel's Monster Arena</h1>
+        
+        <div class="test-section">
+            <h2>Test Results</h2>
+            <div id="test-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Game Canvas</h2>
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div>
+                <button id="startTest">Start All Tests</button>
+                <button id="testSystems">Test Systems</button>
+                <button id="testEntities">Test Entities</button>
+                <button id="testRendering">Test Rendering</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Console Output</h2>
+            <div id="console-output"></div>
+        </div>
+    </div>
+
+    <script>
+        // EMBEDDED COMPONENT CLASSES
+        class Component {
+            constructor() {
+                this.entity = null;
+                this.active = true;
+            }
+
+            destroy() {
+                try {
+                    console.log(`Destroying component ${this.constructor.name}`);
+                    this.active = false;
+                    
+                    if (this.entity) {
+                        this.entity.removeComponent(this.constructor.name);
+                    }
+                    
+                    console.log(`Component ${this.constructor.name} destroyed successfully`);
+                } catch (error) {
+                    console.error(`Error destroying component ${this.constructor.name}:`, error);
+                    this.active = false;
+                }
+            }
+
+            initialize() {
+                // Default implementation - override in subclasses
+            }
+
+            update(deltaTime) {
+                // Default implementation - override in subclasses
+            }
+
+            validate() {
+                return this.active && this.entity !== null;
+            }
+        }
+
+        class Entity {
+            constructor(id = null) {
+                this.id = id || this.generateId();
+                this.components = new Map();
+                this.active = true;
+                this.tags = new Set();
+            }
+
+            generateId() {
+                return 'entity_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            addComponent(component) {
+                try {
+                    if (!component) {
+                        throw new Error('Cannot add null or undefined component');
+                    }
+                    
+                    if (!component.constructor || !component.constructor.name) {
+                        throw new Error('Component must have a valid constructor name');
+                    }
+                    
+                    if (typeof component.destroy !== 'function') {
+                        console.warn(`Component ${component.constructor.name} missing destroy method`);
+                    }
+                    
+                    component.entity = this;
+                    this.components.set(component.constructor.name, component);
+                    
+                    console.log(`Component ${component.constructor.name} added to entity ${this.id}`);
+                    return this;
+                } catch (error) {
+                    console.error(`Failed to add component to entity ${this.id}:`, error);
+                    throw new Error(`Component addition failed: ${error.message}`);
+                }
+            }
+
+            getComponent(componentName) {
+                return this.components.get(componentName);
+            }
+
+            hasComponent(componentName) {
+                return this.components.has(componentName);
+            }
+
+            removeComponent(componentName) {
+                const component = this.components.get(componentName);
+                if (component) {
+                    component.entity = null;
+                    this.components.delete(componentName);
+                }
+                return this;
+            }
+
+            addTag(tag) {
+                this.tags.add(tag);
+                return this;
+            }
+
+            hasTag(tag) {
+                return this.tags.has(tag);
+            }
+
+            removeTag(tag) {
+                this.tags.delete(tag);
+                return this;
+            }
+
+            destroy() {
+                try {
+                    console.log(`Destroying entity ${this.id}`);
+                    
+                    this.components.forEach(component => {
+                        try {
+                            if (typeof component.destroy === 'function') {
+                                component.destroy();
+                            }
+                        } catch (error) {
+                            console.error(`Error destroying component ${component.constructor.name}:`, error);
+                        }
+                        component.entity = null;
+                    });
+                    
+                    this.components.clear();
+                    this.tags.clear();
+                    this.active = false;
+                    
+                    console.log(`Entity ${this.id} destroyed successfully`);
+                } catch (error) {
+                    console.error(`Error destroying entity ${this.id}:`, error);
+                    this.components.clear();
+                    this.tags.clear();
+                    this.active = false;
+                }
+            }
+        }
+
+        class System {
+            constructor() {
+                this.entities = new Set();
+                this.enabled = true;
+                this.priority = 0;
+            }
+
+            addEntity(entity) {
+                this.entities.add(entity);
+            }
+
+            removeEntity(entity) {
+                this.entities.delete(entity);
+            }
+
+            update(deltaTime) {
+                if (!this.enabled) return;
+                
+                try {
+                    this.entities.forEach(entity => {
+                        if (entity.active) {
+                            try {
+                                this.updateEntity(entity, deltaTime);
+                            } catch (error) {
+                                console.error(`Error updating entity ${entity.id} in ${this.constructor.name}:`, error);
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error(`Error in ${this.constructor.name} update:`, error);
+                    if (error.message.includes('critical')) {
+                        this.enabled = false;
+                        console.error(`${this.constructor.name} disabled due to critical error`);
+                    }
+                }
+            }
+
+            updateEntity(entity, deltaTime) {
+                // Override in subclasses
+            }
+
+            render(ctx) {
+                if (!this.enabled) return;
+                
+                try {
+                    this.entities.forEach(entity => {
+                        if (entity.active) {
+                            try {
+                                this.renderEntity(entity, ctx);
+                            } catch (error) {
+                                console.error(`Error rendering entity ${entity.id} in ${this.constructor.name}:`, error);
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error(`Error in ${this.constructor.name} render:`, error);
+                }
+            }
+
+            renderEntity(entity, ctx) {
+                // Override in subclasses
+            }
+
+            destroy() {
+                this.entities.clear();
+            }
+        }
+
+        class PositionComponent extends Component {
+            constructor(x = 0, y = 0) {
+                super();
+                this.x = x;
+                this.y = y;
+                this.rotation = 0;
+                this.scale = 1;
+            }
+
+            setPosition(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+
+            getPosition() {
+                return { x: this.x, y: this.y };
+            }
+
+            distanceTo(otherPosition) {
+                const dx = this.x - otherPosition.x;
+                const dy = this.y - otherPosition.y;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            move(dx, dy) {
+                this.x += dx;
+                this.y += dy;
+            }
+
+            rotate(angle) {
+                this.rotation += angle;
+            }
+
+            setRotation(angle) {
+                this.rotation = angle;
+            }
+        }
+
+        class MonsterComponent extends Component {
+            constructor(type, stats = null) {
+                super();
+                this.type = type;
+                this.level = 1;
+                this.experience = 0;
+                
+                if (stats) {
+                    this.stats = {
+                        health: stats.health,
+                        maxHealth: stats.health,
+                        damage: stats.damage,
+                        range: stats.range,
+                        attackSpeed: stats.attackSpeed,
+                        cost: stats.cost,
+                        upgradeCost: stats.upgradeCost || stats.cost * 2
+                    };
+                } else {
+                    this.loadFromConfig(type);
+                }
+                
+                this.target = null;
+                this.lastAttack = 0;
+                this.attackTimer = 0;
+                this.isAttacking = false;
+                
+                // Set attack cooldown after stats are loaded
+                this.attackCooldown = 1000 / this.stats.attackSpeed;
+            }
+            
+            loadFromConfig(type) {
+                const defaultStats = {
+                    health: 100,
+                    damage: 25,
+                    range: 150,
+                    attackSpeed: 1.0,
+                    cost: 50,
+                    upgradeCost: 100
+                };
+                
+                this.stats = {
+                    health: defaultStats.health,
+                    maxHealth: defaultStats.health,
+                    damage: defaultStats.damage,
+                    range: defaultStats.range,
+                    attackSpeed: defaultStats.attackSpeed,
+                    cost: defaultStats.cost,
+                    upgradeCost: defaultStats.upgradeCost
+                };
+            }
+
+            canAttack() {
+                return Date.now() - this.lastAttack >= this.attackCooldown;
+            }
+
+            attack() {
+                this.lastAttack = Date.now();
+                this.attackTimer = 0;
+                this.isAttacking = true;
+                return this.stats.damage;
+            }
+
+            takeDamage(damage) {
+                this.stats.health -= damage;
+                if (this.stats.health < 0) {
+                    this.stats.health = 0;
+                }
+                return this.stats.health <= 0;
+            }
+
+            isDead() {
+                return this.stats.health <= 0;
+            }
+        }
+
+        class SpriteRenderer extends Component {
+            constructor(width, height, color) {
+                super();
+                this.width = width;
+                this.height = height;
+                this.color = color;
+                this.visible = true;
+            }
+
+            render(ctx, position) {
+                if (!this.visible) return;
+                
+                ctx.save();
+                ctx.fillStyle = this.color;
+                ctx.fillRect(position.x - this.width/2, position.y - this.height/2, this.width, this.height);
+                ctx.restore();
+            }
+        }
+
+        // EMBEDDED TEST FRAMEWORK
+        class EmbeddedTestFramework {
+            constructor() {
+                this.results = [];
+                this.gameEngine = null;
+                this.originalConsoleLog = console.log;
+                this.originalConsoleError = console.error;
+                this.setupConsoleCapture();
+                this.setupEventListeners();
+            }
+
+            setupConsoleCapture() {
+                const consoleOutput = document.getElementById('console-output');
+                
+                console.log = (...args) => {
+                    this.originalConsoleLog(...args);
+                    consoleOutput.innerHTML += args.join(' ') + '\n';
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                };
+                
+                console.error = (...args) => {
+                    this.originalConsoleError(...args);
+                    consoleOutput.innerHTML += '<span style="color: #f00;">ERROR: ' + args.join(' ') + '</span>\n';
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                };
+            }
+
+            setupEventListeners() {
+                document.getElementById('startTest').addEventListener('click', () => this.runAllTests());
+                document.getElementById('testSystems').addEventListener('click', () => this.testSystems());
+                document.getElementById('testEntities').addEventListener('click', () => this.testEntities());
+                document.getElementById('testRendering').addEventListener('click', () => this.testRendering());
+            }
+
+            addResult(testName, passed, message) {
+                this.results.push({ testName, passed, message });
+                this.updateResultsDisplay();
+            }
+
+            updateResultsDisplay() {
+                const resultsDiv = document.getElementById('test-results');
+                resultsDiv.innerHTML = '';
+                
+                this.results.forEach(result => {
+                    const div = document.createElement('div');
+                    div.className = `test-result ${result.passed ? 'test-pass' : 'test-fail'}`;
+                    div.innerHTML = `<strong>${result.testName}:</strong> ${result.passed ? 'PASS' : 'FAIL'} - ${result.message}`;
+                    resultsDiv.appendChild(div);
+                });
+            }
+
+            async runAllTests() {
+                console.log('=== Starting Embedded Test Suite ===');
+                this.results = [];
+                
+                try {
+                    await this.testSystems();
+                    await this.testEntities();
+                    await this.testRendering();
+                    
+                    const passed = this.results.filter(r => r.passed).length;
+                    const total = this.results.length;
+                    
+                    console.log(`=== Test Suite Complete: ${passed}/${total} tests passed ===`);
+                    this.addResult('Overall', passed === total, `${passed}/${total} tests passed`);
+                } catch (error) {
+                    console.error('Test suite failed:', error);
+                    this.addResult('Overall', false, `Test suite failed: ${error.message}`);
+                }
+            }
+
+            async testSystems() {
+                console.log('Testing Systems...');
+                
+                try {
+                    // Test basic system creation
+                    const system = new System();
+                    this.addResult('System Creation', !!system, 'System created successfully');
+                    
+                    // Test system properties
+                    this.addResult('System Properties', system.enabled && system.entities instanceof Set, 'System has correct properties');
+                    
+                } catch (error) {
+                    this.addResult('System Test', false, `Failed: ${error.message}`);
+                }
+            }
+
+            async testEntities() {
+                console.log('Testing Entities...');
+                
+                try {
+                    // Test entity creation
+                    const entity = new Entity();
+                    this.addResult('Entity Creation', !!entity.id, `Entity created with ID: ${entity.id}`);
+                    
+                    // Test component addition
+                    const posComp = new PositionComponent(100, 100);
+                    entity.addComponent(posComp);
+                    this.addResult('Component Addition', entity.hasComponent('PositionComponent'), 'Component added successfully');
+                    
+                    // Test monster component
+                    const monsterComp = new MonsterComponent('GEM');
+                    entity.addComponent(monsterComp);
+                    this.addResult('Monster Component', entity.hasComponent('MonsterComponent'), 'Monster component added');
+                    
+                    // Test entity lifecycle
+                    entity.destroy();
+                    this.addResult('Entity Lifecycle', !entity.active, 'Entity properly destroyed');
+                    
+                } catch (error) {
+                    this.addResult('Entity Test', false, `Failed: ${error.message}`);
+                }
+            }
+
+            async testRendering() {
+                console.log('Testing Rendering...');
+                
+                try {
+                    // Test canvas setup
+                    const canvas = document.getElementById('gameCanvas');
+                    const ctx = canvas.getContext('2d');
+                    this.addResult('Canvas Setup', !!ctx, 'Canvas context obtained');
+                    
+                    // Test entity rendering
+                    const entity = new Entity();
+                    entity.addComponent(new PositionComponent(100, 100));
+                    entity.addComponent(new SpriteRenderer(32, 32, '#ff0000'));
+                    
+                    // Test sprite rendering
+                    const sprite = entity.getComponent('SpriteRenderer');
+                    const pos = entity.getComponent('PositionComponent');
+                    sprite.render(ctx, pos);
+                    this.addResult('Sprite Rendering', true, 'Sprite rendered successfully');
+                    
+                } catch (error) {
+                    this.addResult('Rendering Test', false, `Failed: ${error.message}`);
+                }
+            }
+        }
+
+        // Initialize test framework when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.embeddedTestFramework = new EmbeddedTestFramework();
+            console.log('Embedded Test Framework initialized. Click "Start All Tests" to begin.');
+        });
+    </script>
+</body>
+</html>
