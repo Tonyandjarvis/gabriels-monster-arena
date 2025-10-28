@@ -160,7 +160,11 @@ class CombatSystem extends System {
                 const enemyComp = entity.getComponent('EnemyComponent');
                 
                 if (enemyPos && enemyComp && !enemyComp.isDead()) {
-                    const distance = position.distanceTo(enemyPos);
+                    // Calculate distance manually since position is a PositionComponent
+                    const dx = enemyPos.x - position.x;
+                    const dy = enemyPos.y - position.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
                     if (distance < nearestDistance) {
                         nearestDistance = distance;
                         nearestEnemy = entity;
@@ -176,7 +180,12 @@ class CombatSystem extends System {
         const targetPos = target.getComponent('PositionComponent');
         if (!targetPos) return false;
         
-        return position.distanceTo(targetPos) <= range;
+        // Calculate distance manually
+        const dx = targetPos.x - position.x;
+        const dy = targetPos.y - position.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        return distance <= range;
     }
 
     isTargetDead(target) {
