@@ -447,6 +447,7 @@ class GameEngine {
         switch (e.code) {
             case 'Escape':
                 if (this.placementSystem.placementMode) {
+                    console.log('🎯 ESC key pressed - canceling placement mode');
                     this.placementSystem.exitPlacementMode();
                     this.uiSystem.exitPlacementMode();
                 }
@@ -488,6 +489,22 @@ class GameEngine {
         
         // Handle UI interactions
         if (this.uiSystem.handleTouch(x, y)) {
+            return;
+        }
+        
+        // Handle right-click to cancel placement mode
+        if (this.uiSystem.placementMode) {
+            console.log('🎯 Right-click detected - canceling placement mode');
+            this.uiSystem.exitPlacementMode();
+            this.placementSystem.exitPlacementMode();
+            return;
+        }
+        
+        // Handle clicking empty areas to cancel placement mode
+        if (this.uiSystem.placementMode) {
+            console.log('🎯 Empty area click detected - canceling placement mode');
+            this.uiSystem.exitPlacementMode();
+            this.placementSystem.exitPlacementMode();
             return;
         }
         

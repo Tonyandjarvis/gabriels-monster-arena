@@ -220,6 +220,15 @@ class UISystem extends System {
         this.selectedMonster = monsterType;
         this.placementMode = true;
         
+        // Create cancel button
+        this.cancelButton = new CancelButton(
+            this.canvas.width - 120, 
+            this.canvas.height - 60, 
+            100, 
+            40, 
+            () => this.exitPlacementMode()
+        );
+        
         // Update button states
         this.buttons.forEach(button => {
             button.selected = button.monsterType === monsterType;
@@ -229,6 +238,8 @@ class UISystem extends System {
         if (this.gameEngine && this.gameEngine.tutorialSystem) {
             this.gameEngine.tutorialSystem.completeAction('click_monster');
         }
+        
+        console.log(`🎯 Entered placement mode for ${monsterType}`);
     }
 
     exitPlacementMode() {
@@ -239,6 +250,11 @@ class UISystem extends System {
         this.buttons.forEach(button => {
             button.selected = false;
         });
+        
+        // Clear cancel button
+        this.cancelButton = null;
+        
+        console.log('🎯 Exited placement mode');
     }
 
     enterUpgradeMode() {
@@ -335,6 +351,12 @@ class UISystem extends System {
             // Render monster selection buttons
             this.renderMonsterButtons(ctx);
             console.log('✅ Buttons rendered');
+            
+            // Render cancel button if in placement mode
+            if (this.placementMode && this.cancelButton) {
+                this.cancelButton.render(ctx);
+                console.log('✅ Cancel button rendered');
+            }
             
             // Render placement mode indicator
             if (this.placementMode) {
@@ -475,6 +497,14 @@ class UISystem extends System {
             }
         }
         
+        // Check cancel button if in placement mode
+        if (this.placementMode && this.cancelButton) {
+            if (this.cancelButton.isPointInside(x, y)) {
+                this.exitPlacementMode();
+                return true;
+            }
+        }
+        
         return false;
     }
 
@@ -515,6 +545,47 @@ class UISystem extends System {
     addScore(points) {
         this.gameStats.score += points;
         this.updateGameStats(this.gameStats);
+    }
+}
+
+class CancelButton {
+    constructor(x, y, width, height, onClick) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.onClick = onClick;
+        this.pressed = false;
+    }
+
+    isPointInside(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + this.height;
+    }
+
+    render(ctx) {
+        ctx.save();
+        
+        // Button background
+        ctx.fillStyle = this.pressed ? '#c0392b' : '#e74c3c';
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Button border
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        
+        // Cancel text
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('CANCEL', this.x + this.width / 2, this.y + this.height / 2 + 5);
+        
+        // Instructions
+        ctx.font = '10px Arial';
+        ctx.fillText('ESC or Click', this.x + this.width / 2, this.y + this.height - 5);
+        
+        ctx.restore();
     }
 }
 
