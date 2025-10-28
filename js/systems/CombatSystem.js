@@ -236,8 +236,8 @@ class CombatSystem extends System {
                     const predictionTime = distance / projectileComp.speed;
 
                     // Predict enemy position based on their movement
-                    const predictedX = targetPos.x + (enemySpeed * predictionTime * 0.001); // rough prediction
-                    const predictedY = targetPos.y; // enemies move in straight lines mostly
+                    const predictedX = targetPos.x + (enemySpeed * predictionTime * 0.0005); // Reduced factor for accuracy
+                    const predictedY = targetPos.y + (enemyComp.direction ? enemyComp.direction.y * enemySpeed * predictionTime * 0.0005 : 0); // Add Y prediction if available
 
                     const predictedDx = predictedX - pos.x;
                     const predictedDy = predictedY - pos.y;
@@ -245,11 +245,14 @@ class CombatSystem extends System {
 
                     if (distance < collisionRadius || predictedDistance < collisionRadius) {
                         // Hit target
-                        console.log(`Projectile hit enemy at distance ${distance}, predicted: ${predictedDistance}`);
+                        console.log(`Hit detected! Distance: ${distance}, Predicted: ${predictedDistance}`);
                         this.hitTarget(projectile, projectileComp);
                         this.projectilePool.release(projectile);
                         this.projectiles.splice(i, 1);
                     } else {
+                        // Miss - debug logging
+                        console.log(`Missed hit - Distance: ${distance}, Predicted: ${predictedDistance}`);
+
                         // Move towards target with slight prediction
                         const targetX = (targetPos.x + predictedX) / 2; // Average current and predicted
                         const targetY = (targetPos.y + predictedY) / 2;

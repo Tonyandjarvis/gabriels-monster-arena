@@ -22,7 +22,7 @@ class MonsterComponent extends Component {
         }
         
         this.target = null;
-        this.lastAttack = 0;
+        this.lastAttack = -Infinity; // Allow immediate first attack
         this.attackTimer = 0;
         this.isAttacking = false;
         
