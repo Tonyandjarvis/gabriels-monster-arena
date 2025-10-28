@@ -23,7 +23,6 @@ class EnemyComponent extends Component {
         this.stats.health -= actualDamage;
         
         if (this.stats.health <= 0) {
-            this.stats.health = 0;
             this.alive = false;
             return true; // Enemy died
         }

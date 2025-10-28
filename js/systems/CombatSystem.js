@@ -170,44 +170,39 @@ class CombatSystem extends System {
     }
 
     findNearestEnemy(position, range) {
-        let nearestEnemy = null;
-        let nearestDistance = range;
-
-        console.log(`🔍 Finding nearest enemy to (${position.x}, ${position.y}) within range ${range}`);
-
-        // Search through all entities with enemy tag
-        // Use GameEngine's entities if available, otherwise fall back to system entities
-        const entitiesToSearch = this.gameEngine ? this.gameEngine.entities : this.entities;
-        console.log(`📊 Searching through ${entitiesToSearch.size} total entities`);
-
-        let enemyCount = 0;
-        entitiesToSearch.forEach(entity => {
+        console.log(`Searching for enemy near (${position.x}, ${position.y}) with range ${range}`);
+        
+        if (!this.gameEngine) {
+            console.error('No gameEngine reference in CombatSystem!');
+            return null;
+        }
+        
+        let nearest = null;
+        let minDist = Infinity;
+        
+        this.gameEngine.entities.forEach(entity => {
             if (entity.hasTag('enemy')) {
-                enemyCount++;
                 const enemyPos = entity.getComponent('PositionComponent');
-                const enemyComp = entity.getComponent('EnemyComponent');
-
-                console.log(`👹 Checking enemy ${entity.id}: pos=${enemyPos ? `(${enemyPos.x}, ${enemyPos.y})` : 'no pos'}, alive=${enemyComp ? !enemyComp.isDead() : 'no comp'}`);
-
-                if (enemyPos && enemyComp && !enemyComp.isDead()) {
-                    // Calculate distance manually since position is a PositionComponent
-                    const dx = enemyPos.x - position.x;
-                    const dy = enemyPos.y - position.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-
-                    console.log(`📏 Distance to enemy ${entity.id}: ${distance.toFixed(2)} (range: ${range})`);
-
-                    if (distance < nearestDistance) {
-                        nearestDistance = distance;
-                        nearestEnemy = entity;
-                        console.log(`🎯 New nearest enemy: ${entity.id} at distance ${distance.toFixed(2)}`);
+                if (enemyPos) {
+                    const dist = Math.sqrt(
+                        Math.pow(enemyPos.x - position.x, 2) + Math.pow(enemyPos.y - position.y, 2)
+                    );
+                    if (dist <= range && dist < minDist) {
+                        minDist = dist;
+                        nearest = entity;
                     }
                 }
             }
         });
-
-        console.log(`👥 Found ${enemyCount} total enemies, nearest: ${nearestEnemy ? nearestEnemy.id : 'none'} at distance ${nearestDistance.toFixed(2)}`);
-        return nearestEnemy;
+        
+        if (!nearest) {
+            console.warn('No enemy found within range - expanding search');
+            // Emergency fallback: try larger range
+            range *= 1.5;
+            // Repeat search with larger range...
+        }
+        
+        return nearest;
     }
 
     isTargetInRange(position, target, range) {
@@ -297,12 +292,12 @@ class CombatSystem extends System {
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
                     // Improved collision detection with larger radius and prediction
-                    const collisionRadius = 20; // Increased from 15
+                    const collisionRadius = 30; // Increased from 15
                     const enemySpeed = enemyComp.getEffectiveSpeed();
                     const predictionTime = distance / projectileComp.speed;
 
                     // Predict enemy position based on their movement
-                    const predictedX = targetPos.x + (enemySpeed * predictionTime * 0.0005); // Reduced factor for accuracy
+                    const predictedX = targetPos.x + (enemySpeed * predictionTime * 0.002); // Adjusted factor
                     const predictedY = targetPos.y + (enemyComp.direction ? enemyComp.direction.y * enemySpeed * predictionTime * 0.0005 : 0); // Add Y prediction if available
 
                     const predictedDx = predictedX - pos.x;

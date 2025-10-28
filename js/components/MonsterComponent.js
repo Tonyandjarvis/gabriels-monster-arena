@@ -77,10 +77,13 @@ class MonsterComponent extends Component {
     }
 
     attack() {
-        this.lastAttack = Date.now();
-        this.attackTimer = 0;
-        this.isAttacking = true;
-        return this.stats.damage;
+        if (this.canAttack()) {
+            this.lastAttack = Date.now();
+            this.attackTimer = 0;
+            this.isAttacking = true;
+            return this.stats.damage;
+        }
+        return 0;
     }
 
     takeDamage(damage) {

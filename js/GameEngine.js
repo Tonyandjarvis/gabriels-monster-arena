@@ -1230,3 +1230,7 @@ class GameEngine {
         ctx.restore();
     }
 }
+
+// For production: Enable HTTPS on AWS EC2 with Let's Encrypt
+// sudo apt install certbot python3-certbot-apache
+// sudo certbot --apache
