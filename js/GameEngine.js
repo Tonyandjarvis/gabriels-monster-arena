@@ -500,14 +500,6 @@ class GameEngine {
             return;
         }
         
-        // Handle clicking empty areas to cancel placement mode
-        if (this.uiSystem.placementMode) {
-            console.log('🎯 Empty area click detected - canceling placement mode');
-            this.uiSystem.exitPlacementMode();
-            this.placementSystem.exitPlacementMode();
-            return;
-        }
-        
         // Handle monster removal
         if (this.uiSystem.isRemovalMode()) {
             if (this.gameState !== 'GAMEPLAY') {
@@ -544,39 +536,39 @@ class GameEngine {
 
             console.log(`Attempting to place monster at (${x}, ${y}), cost: ${cost}, can afford: ${this.uiSystem.canAffordMonster(monsterType)}`);
 
-            if (this.uiSystem.canAffordMonster(monsterType)) {
-                try {
-                    const monster = this.placementSystem.placeMonster(x, y, monsterType);
-                    if (monster) {
-                        console.log('Monster placed successfully!', monster);
+            try {
+                const monster = this.placementSystem.placeMonster(x, y, monsterType);
+                if (monster) {
+                    // successful placement
+                    console.log('Monster placed successfully!', monster);
 
-                        // Spend currency and check if successful
-                        if (this.uiSystem.spendCurrency(cost)) {
-                            console.log(`Currency spent: ${cost}, remaining: ${this.uiSystem.getGameStats().currency}`);
+                    // Spend currency and check if successful
+                    if (this.uiSystem.spendCurrency(cost)) {
+                        console.log(`Currency spent: ${cost}, remaining: ${this.uiSystem.getGameStats().currency}`);
 
-                            if (this.addEntity(monster)) {
-                                this.audioSystem.playSound('monster_place');
-                                this.placementSystem.exitPlacementMode();
-                                this.uiSystem.exitPlacementMode();
-                                this.tutorialSystem.completeAction('place_monster');
-                            } else {
-                                console.error('Failed to add monster to game engine');
-                                // Refund currency if entity addition failed
-                                this.uiSystem.addCurrency(cost);
-                            }
+                        if (this.addEntity(monster)) {
+                            this.audioSystem.playSound('monster_place');
+                            this.placementSystem.exitPlacementMode();
+                            this.uiSystem.exitPlacementMode();
+                            this.tutorialSystem.completeAction('place_monster');
                         } else {
-                            console.error('Failed to spend currency');
+                            console.error('Failed to add monster to game engine');
+                            // Refund currency if entity addition failed
+                            this.uiSystem.addCurrency(cost);
                         }
                     } else {
-                        console.log('Monster placement failed - invalid position or system error');
+                        console.error('Failed to spend currency');
                     }
-                } catch (error) {
-                    console.error('Error during monster placement:', error);
-                    // Refund currency on error
-                    this.uiSystem.addCurrency(cost);
+                } else {
+                    // Placement failed (invalid spot) - treat as empty click and cancel
+                    console.log('🎯 Invalid placement click - canceling placement mode');
+                    this.uiSystem.exitPlacementMode();
+                    this.placementSystem.exitPlacementMode();
                 }
-            } else {
-                console.log('Cannot afford monster - insufficient currency');
+            } catch (error) {
+                console.error('Error during monster placement:', error);
+                // Refund currency on error
+                this.uiSystem.addCurrency(cost);
             }
         }
         
