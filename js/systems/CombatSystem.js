@@ -64,12 +64,14 @@ class CombatSystem extends System {
     }
 
     update(deltaTime) {
+        console.log(`🔫 CombatSystem.update() called with deltaTime: ${deltaTime}`);
+
         // Update monsters
         this.updateMonsters(deltaTime);
-        
+
         // Update projectiles
         this.updateProjectiles(deltaTime);
-        
+
         // Update damage numbers
         this.updateDamageNumbers(deltaTime);
         
@@ -102,46 +104,67 @@ class CombatSystem extends System {
     }
 
     updateMonsters(deltaTime) {
+        console.log(`CombatSystem: updateMonsters called, entities count: ${this.entities.size}`);
+
+        let monsterCount = 0;
         this.entities.forEach(entity => {
             // Only process entities with monster tag
             if (!entity.hasTag('monster')) return;
-            
+
+            monsterCount++;
             const monsterComp = entity.getComponent('MonsterComponent');
             const pos = entity.getComponent('PositionComponent');
-            
+
             if (monsterComp && pos && !monsterComp.isDead()) {
+                console.log(`Processing monster ${entity.id} at (${pos.x}, ${pos.y})`);
                 this.updateMonsterCombat(entity, monsterComp, pos, deltaTime);
+            } else {
+                console.log(`Skipping monster ${entity.id} - missing components or dead`);
             }
         });
+
+        console.log(`CombatSystem: Processed ${monsterCount} monsters`);
     }
 
     updateMonsterCombat(monster, monsterComp, pos, deltaTime) {
+        console.log(`⚔️ Processing monster ${monster.id} at position (${pos.x}, ${pos.y})`);
+
         // Find target if needed - force retarget every few seconds to avoid stuck targeting
-        if (!monsterComp.target || this.isTargetDead(monsterComp.target) || 
+        if (!monsterComp.target || this.isTargetDead(monsterComp.target) ||
             (monsterComp.lastTargetTime && Date.now() - monsterComp.lastTargetTime > 3000)) {
+            console.log(`🎯 Monster ${monster.id} needs new target`);
             monsterComp.target = this.findNearestEnemy(pos, monsterComp.stats.range);
             monsterComp.lastTargetTime = Date.now();
             if (monsterComp.target) {
-                console.log(`Monster ${monster.id} targeting enemy ${monsterComp.target.id} at range ${monsterComp.stats.range}`);
+                console.log(`✅ Monster ${monster.id} targeting enemy ${monsterComp.target.id} at range ${monsterComp.stats.range}`);
             } else {
-                console.log(`Monster ${monster.id} found no enemies in range ${monsterComp.stats.range}`);
+                console.log(`❌ Monster ${monster.id} found no enemies in range ${monsterComp.stats.range}`);
             }
+        } else {
+            console.log(`🎯 Monster ${monster.id} has existing target: ${monsterComp.target ? monsterComp.target.id : 'none'}`);
         }
-        
+
         // Attack if target is in range and cooldown is ready
-        if (monsterComp.target && this.isTargetInRange(pos, monsterComp.target, monsterComp.stats.range)) {
-            const canAttack = monsterComp.canAttack();
-            const timeSinceLastAttack = Date.now() - monsterComp.lastAttack;
-            const cooldown = monsterComp.attackCooldown;
-            
-            console.log(`Monster ${monster.id} attack check: canAttack=${canAttack}, timeSince=${timeSinceLastAttack}, cooldown=${cooldown}`);
-            
-            if (canAttack) {
-                console.log(`Monster ${monster.id} attacking enemy ${monsterComp.target.id}`);
-                this.performAttack(monster, monsterComp, pos);
+        if (monsterComp.target) {
+            const inRange = this.isTargetInRange(pos, monsterComp.target, monsterComp.stats.range);
+            console.log(`📏 Monster ${monster.id} target in range: ${inRange}`);
+
+            if (inRange) {
+                const canAttack = monsterComp.canAttack();
+                const timeSinceLastAttack = Date.now() - monsterComp.lastAttack;
+                const cooldown = monsterComp.attackCooldown;
+
+                console.log(`⏰ Monster ${monster.id} attack check: canAttack=${canAttack}, timeSince=${timeSinceLastAttack}ms, cooldown=${cooldown}ms`);
+
+                if (canAttack) {
+                    console.log(`🚀 Monster ${monster.id} ATTACKING enemy ${monsterComp.target.id}!`);
+                    this.performAttack(monster, monsterComp, pos);
+                } else {
+                    console.log(`⏳ Monster ${monster.id} on cooldown (${timeSinceLastAttack}/${cooldown}ms)`);
+                }
             }
         }
-        
+
         // Update monster state
         monsterComp.update(deltaTime);
     }
@@ -149,30 +172,41 @@ class CombatSystem extends System {
     findNearestEnemy(position, range) {
         let nearestEnemy = null;
         let nearestDistance = range;
-        
+
+        console.log(`🔍 Finding nearest enemy to (${position.x}, ${position.y}) within range ${range}`);
+
         // Search through all entities with enemy tag
         // Use GameEngine's entities if available, otherwise fall back to system entities
         const entitiesToSearch = this.gameEngine ? this.gameEngine.entities : this.entities;
-        
+        console.log(`📊 Searching through ${entitiesToSearch.size} total entities`);
+
+        let enemyCount = 0;
         entitiesToSearch.forEach(entity => {
             if (entity.hasTag('enemy')) {
+                enemyCount++;
                 const enemyPos = entity.getComponent('PositionComponent');
                 const enemyComp = entity.getComponent('EnemyComponent');
-                
+
+                console.log(`👹 Checking enemy ${entity.id}: pos=${enemyPos ? `(${enemyPos.x}, ${enemyPos.y})` : 'no pos'}, alive=${enemyComp ? !enemyComp.isDead() : 'no comp'}`);
+
                 if (enemyPos && enemyComp && !enemyComp.isDead()) {
                     // Calculate distance manually since position is a PositionComponent
                     const dx = enemyPos.x - position.x;
                     const dy = enemyPos.y - position.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    
+
+                    console.log(`📏 Distance to enemy ${entity.id}: ${distance.toFixed(2)} (range: ${range})`);
+
                     if (distance < nearestDistance) {
                         nearestDistance = distance;
                         nearestEnemy = entity;
+                        console.log(`🎯 New nearest enemy: ${entity.id} at distance ${distance.toFixed(2)}`);
                     }
                 }
             }
         });
-        
+
+        console.log(`👥 Found ${enemyCount} total enemies, nearest: ${nearestEnemy ? nearestEnemy.id : 'none'} at distance ${nearestDistance.toFixed(2)}`);
         return nearestEnemy;
     }
 
@@ -194,19 +228,35 @@ class CombatSystem extends System {
     }
 
     performAttack(monster, monsterComp, pos) {
+        console.log(`💥 PERFORMING ATTACK: Monster ${monster.id} firing at ${monsterComp.target.id}`);
+
         const damage = monsterComp.attack();
-        
+        console.log(`⚡ Damage calculated: ${damage}`);
+
         // Create projectile
         const projectile = this.projectilePool.acquire();
+        console.log(`🚀 Projectile acquired from pool: ${projectile ? 'success' : 'failed'}`);
+
+        if (!projectile) {
+            console.error('❌ Failed to acquire projectile from pool!');
+            return;
+        }
+
         const projectileComp = projectile.getComponent('ProjectileComponent');
         const projectilePos = projectile.getComponent('PositionComponent');
-        
+
+        if (!projectileComp || !projectilePos) {
+            console.error('❌ Projectile missing required components!');
+            return;
+        }
+
         projectilePos.setPosition(pos.x, pos.y);
         projectileComp.initialize(damage, 300, monsterComp.target);
         projectileComp.sourceMonster = monster; // Track which monster fired this projectile
-        
+
         this.projectiles.push(projectile);
-        
+        console.log(`📦 Projectile created and added to active list. Total projectiles: ${this.projectiles.length}`);
+
         // Add combat event
         this.combatEvents.push({
             type: 'attack',
@@ -214,15 +264,22 @@ class CombatSystem extends System {
             target: monsterComp.target,
             damage: damage
         });
+
+        console.log(`📢 Combat event added: attack from ${monster.id} to ${monsterComp.target.id}`);
     }
 
     updateProjectiles(deltaTime) {
+        console.log(`🚀 Updating ${this.projectiles.length} projectiles`);
+
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             const projectile = this.projectiles[i];
             const projectileComp = projectile.getComponent('ProjectileComponent');
             const pos = projectile.getComponent('PositionComponent');
-            
+
+            console.log(`📍 Projectile ${i}: pos=(${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}), target=${projectileComp.target ? projectileComp.target.id : 'none'}`);
+
             if (!projectileComp.update(deltaTime)) {
+                console.log(`⏰ Projectile ${i} expired, releasing to pool`);
                 // Projectile expired
                 this.projectilePool.release(projectile);
                 this.projectiles.splice(i, 1);
@@ -438,13 +495,71 @@ class CombatSystem extends System {
         return {
             activeProjectiles: this.projectiles.length,
             activeDamageNumbers: this.damageNumbers.length,
-            projectilePoolSize: this.projectilePool.getPooledCount()
+            projectilePoolSize: this.projectilePool.getPooledCount(),
+            totalEntities: this.entities.size,
+            monsterCount: Array.from(this.entities.values()).filter(e => e.hasTag('monster')).length,
+            enemyCount: Array.from(this.entities.values()).filter(e => e.hasTag('enemy')).length
         };
+    }
+
+    // Debug function - call from browser console: window.gameEngine.combatSystem.testCombat()
+    testCombat() {
+        console.log('🧪 === COMBAT SYSTEM TEST ===');
+        console.log('Stats:', this.getCombatStats());
+
+        console.log('🎯 Testing monster targeting...');
+        this.entities.forEach(entity => {
+            if (entity.hasTag('monster')) {
+                const monsterComp = entity.getComponent('MonsterComponent');
+                const pos = entity.getComponent('PositionComponent');
+                if (monsterComp && pos) {
+                    console.log(`Monster ${entity.id} at (${pos.x}, ${pos.y})`);
+                    console.log(`  Range: ${monsterComp.stats.range}`);
+                    console.log(`  Can attack: ${monsterComp.canAttack()}`);
+                    console.log(`  Last attack: ${monsterComp.lastAttack}`);
+                    console.log(`  Cooldown: ${monsterComp.attackCooldown}`);
+
+                    const target = this.findNearestEnemy(pos, monsterComp.stats.range);
+                    console.log(`  Target found: ${target ? target.id : 'none'}`);
+
+                    if (target) {
+                        const inRange = this.isTargetInRange(pos, target, monsterComp.stats.range);
+                        console.log(`  Target in range: ${inRange}`);
+                    }
+                }
+            }
+        });
+
+        console.log('👹 Testing enemy detection...');
+        this.entities.forEach(entity => {
+            if (entity.hasTag('enemy')) {
+                const enemyComp = entity.getComponent('EnemyComponent');
+                const pos = entity.getComponent('PositionComponent');
+                console.log(`Enemy ${entity.id}: alive=${enemyComp ? !enemyComp.isDead() : 'no comp'}, pos=${pos ? `(${pos.x}, ${pos.y})` : 'no pos'}`);
+            }
+        });
+
+        console.log('=== TEST COMPLETE ===');
+        return 'Combat system test completed - check console logs above';
     }
 
     getCombatEvents() {
         const events = [...this.combatEvents];
         this.combatEvents.length = 0;
         return events;
+    }
+
+    addEntity(entity) {
+        if (entity && !this.entities.has(entity.id)) {
+            this.entities.set(entity.id, entity);
+            console.log(`Entity ${entity.id} added to CombatSystem`);
+        }
+    }
+
+    removeEntity(entity) {
+        if (entity && this.entities.has(entity.id)) {
+            this.entities.delete(entity.id);
+            console.log(`Entity ${entity.id} removed from CombatSystem`);
+        }
     }
 }
