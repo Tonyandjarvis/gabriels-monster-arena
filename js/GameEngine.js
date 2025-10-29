@@ -468,7 +468,11 @@ class GameEngine {
     }
 
     handleInput(x, y, pressed) {
-        if (!pressed) return;
+        console.log(`🖱️ HandleInput called at (${x}, ${y}), pressed: ${pressed}`);
+        if (!pressed) {
+            console.log('Input not pressed - ignoring');
+            return;
+        }
 
         // Prevent input during critical operations
         if (this.operationInProgress) {

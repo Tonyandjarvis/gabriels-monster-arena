@@ -489,6 +489,7 @@ class UISystem extends System {
     }
 
     handleTouch(x, y) {
+        console.log(`🖐️ UISystem.handleTouch called at (${x}, ${y})`);
         // Check monster selection buttons
         for (let button of this.buttons) {
             if (button.isPointInside(x, y)) {
@@ -505,7 +506,7 @@ class UISystem extends System {
             }
         }
         
-        return false;
+        return false; // Log if not handled
     }
 
     updateGameStats(stats) {
