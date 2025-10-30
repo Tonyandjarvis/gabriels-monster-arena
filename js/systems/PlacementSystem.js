@@ -111,6 +111,14 @@ class PlacementSystem extends System {
         return true;
     }
 
+    validatePlacement(gridX, gridY) {
+        if (!this.isInBounds(gridX, gridY)) return {ok: false, reason: 'out of bounds'};
+        if (this.isOccupied(gridX, gridY)) return {ok: false, reason: 'occupied'};
+        if (this.isOnPathStrict(gridX, gridY)) return {ok: false, reason: 'too close to path'};
+        if (this.isObstacle(gridX, gridY)) return {ok: false, reason: 'obstacle'};
+        return {ok: true, reason: 'valid'};
+    }
+
     isInBounds(gridX, gridY) {
         const canvas = document.getElementById('gameCanvas');
         if (!canvas) {
@@ -131,7 +139,7 @@ class PlacementSystem extends System {
 
     isOnPathStrict(gridX, gridY) {
         const worldPos = this.gridToWorld(gridX, gridY);
-        const tolerance = this.gridSize * 1.2; // Increased tolerance to allow more placement areas
+        const tolerance = this.gridSize * 0.8; // Relaxed
 
         // Get path from pathfinding system if available
         const path = this.pathfindingSystem ? this.pathfindingSystem.getPath() : this.path;

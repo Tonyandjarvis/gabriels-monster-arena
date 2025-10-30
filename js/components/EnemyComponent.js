@@ -24,6 +24,7 @@ class EnemyComponent extends Component {
         
         if (this.stats.health <= 0) {
             this.alive = false;
+            window.gameEngine.eventSystem.emit('enemy_death', {entity: this});
             return true; // Enemy died
         }
         return false;

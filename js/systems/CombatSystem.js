@@ -180,7 +180,9 @@ class CombatSystem extends System {
         let nearest = null;
         let minDist = Infinity;
         
-        this.gameEngine.entities.forEach(entity => {
+        const entitiesToSearch = this.gameEngine ? this.gameEngine.entities : this.entities;
+
+        entitiesToSearch.forEach(entity => {
             if (entity.hasTag('enemy')) {
                 const enemyPos = entity.getComponent('PositionComponent');
                 if (enemyPos) {
@@ -246,7 +248,7 @@ class CombatSystem extends System {
         }
 
         projectilePos.setPosition(pos.x, pos.y);
-        projectileComp.initialize(damage, 300, monsterComp.target);
+        projectileComp.initialize(damage, 400, monsterComp.target);
         projectileComp.sourceMonster = monster; // Track which monster fired this projectile
 
         this.projectiles.push(projectile);
@@ -292,12 +294,12 @@ class CombatSystem extends System {
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
                     // Improved collision detection with larger radius and prediction
-                    const collisionRadius = 30; // Increased from 15
+                    const collisionRadius = 35; // Increased from 15
                     const enemySpeed = enemyComp.getEffectiveSpeed();
                     const predictionTime = distance / projectileComp.speed;
 
                     // Predict enemy position based on their movement
-                    const predictedX = targetPos.x + (enemySpeed * predictionTime * 0.002); // Adjusted factor
+                    const predictedX = targetPos.x + (enemySpeed * predictionTime * 0.003); // Adjusted factor
                     const predictedY = targetPos.y + (enemyComp.direction ? enemyComp.direction.y * enemySpeed * predictionTime * 0.0005 : 0); // Add Y prediction if available
 
                     const predictedDx = predictedX - pos.x;

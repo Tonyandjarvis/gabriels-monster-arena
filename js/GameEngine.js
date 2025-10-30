@@ -469,6 +469,7 @@ class GameEngine {
 
     handleInput(x, y, pressed) {
         console.log(`🖱️ HandleInput called at (${x}, ${y}), pressed: ${pressed}`);
+        if (window.debugOverlay) window.debugOverlay.logInput(x, y);
         if (!pressed) {
             console.log('Input not pressed - ignoring');
             return;
@@ -716,8 +717,13 @@ class GameEngine {
             
             for (const { system, name } of systemsToSync) {
                 if (system && system.addEntity) {
-                    system.addEntity(entity);
-                    console.log(`Entity ${entity.id} added to ${name} system`);
+                    try {
+                        system.addEntity(entity);
+                        console.log(`Entity ${entity.id} added to ${name} system`);
+                    } catch (e) {
+                        console.error(`Failed to add to ${name} - retrying...`);
+                        system.addEntity(entity); // Retry once
+                    }
                 }
             }
             
@@ -1230,3 +1236,8 @@ class GameEngine {
 // For production: Enable HTTPS on AWS EC2 with Let's Encrypt
 // sudo apt install certbot python3-certbot-apache
 // sudo certbot --apache
+
+window.addEventListener('error', (event) => {
+  console.error('Unhandled error:', event.message, event.filename, event.lineno);
+  // Optional: Send to server or alert
+});

@@ -136,6 +136,12 @@ function initializeGame() {
         gameEngine = new GameEngine();
         gameEngine.initialize();
         
+        // After gameEngine initialization
+        if (new URLSearchParams(window.location.search).has('debug')) {
+          const DebugOverlay = require('./utils/DebugOverlay.js');
+          window.debugOverlay = new DebugOverlay();
+        }
+        
         // Start the game
         gameEngine.start();
         
