@@ -225,6 +225,12 @@ describe('PlacementSystem', () => {
       expect(duration).toBeLessThan(50); // Should complete in less than 50ms
     });
   });
+
+  test('validatePlacement returns reason', () => {
+    const result = placementSystem.validatePlacement(5, 5);
+    expect(result.ok).toBe(true);
+    expect(result.reason).toBe('valid');
+  });
 });
 
 

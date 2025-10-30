@@ -280,6 +280,10 @@ global.IntersectionObserver = class MockIntersectionObserver {
   disconnect() {}
 };
 
+// At top
+global.TextEncoder = require('util').TextEncoder;
+global.TextDecoder = require('util').TextDecoder;
+
 // Set up test environment
 beforeEach(() => {
   // Clear all mocks before each test

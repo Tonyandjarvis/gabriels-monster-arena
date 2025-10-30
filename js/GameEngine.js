@@ -391,6 +391,7 @@ class GameEngine {
         if (this.waveSystem.startWave()) {
             this.gameStats.wave = this.waveSystem.currentWave + 1;
             this.uiSystem.updateGameStats(this.gameStats);
+            Analytics.track('wave_started');
         }
     }
 
@@ -556,6 +557,7 @@ class GameEngine {
                             this.placementSystem.exitPlacementMode();
                             this.uiSystem.exitPlacementMode();
                             this.tutorialSystem.completeAction('place_monster');
+                            Analytics.track('monster_placed');
                         } else {
                             console.error('Failed to add monster to game engine');
                             // Refund currency if entity addition failed
