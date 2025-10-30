@@ -48,10 +48,13 @@ class GameEngine {
 
     initialize() {
         try {
+            console.log('GameEngine: Initializing...');
             this.canvas = document.getElementById('gameCanvas');
+            console.log('GameEngine: Canvas element:', this.canvas);
             if (!this.canvas) {
                 throw new Error('Canvas element not found');
             }
+            console.log('GameEngine: Canvas dimensions:', this.canvas.width, 'x', this.canvas.height);
             
             this.ctx = this.canvas.getContext('2d');
             if (!this.ctx) {
@@ -268,15 +271,18 @@ class GameEngine {
     }
 
     setupEventListeners() {
+        console.log('GameEngine: Setting up event listeners...');
         // Mouse events
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-        
+        console.log('GameEngine: Mouse events set up');
+
         // Touch events
         this.canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e));
         this.canvas.addEventListener('touchend', (e) => this.handleTouchEnd(e));
         this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e));
+        console.log('GameEngine: Touch events set up');
         
         // Keyboard events
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
