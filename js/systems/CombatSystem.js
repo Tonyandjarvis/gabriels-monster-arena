@@ -1,6 +1,7 @@
 class CombatSystem extends System {
     constructor() {
         super();
+        this.entities = new Map(); // Initialize entities Map
         this.projectiles = [];
         this.projectilePool = new ObjectPool(
             () => this.createProjectile(),
@@ -12,7 +13,7 @@ class CombatSystem extends System {
             () => this.createDamageNumber(),
             (damageNumber) => damageNumber.reset()
         );
-        
+
         // System dependencies
         this.renderSystem = null;
         this.particleSystem = null;
