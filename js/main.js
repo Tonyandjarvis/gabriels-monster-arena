@@ -156,6 +156,11 @@ function initializeGame() {
 
         console.log('Game started successfully!');
 
+        // Add visual debug info if in debug mode
+        if (new URLSearchParams(window.location.search).has('debug')) {
+            addVisualDebugInfo();
+        }
+
         // Show game instructions
         showGameInstructions();
         
@@ -163,6 +168,67 @@ function initializeGame() {
         console.error('Failed to initialize game:', error);
         showError('Failed to initialize game. Please refresh the page and try again.');
     }
+}
+
+function addVisualDebugInfo() {
+    const debugDiv = document.createElement('div');
+    debugDiv.id = 'debugInfo';
+    debugDiv.style.position = 'fixed';
+    debugDiv.style.top = '50px';
+    debugDiv.style.left = '10px';
+    debugDiv.style.background = 'rgba(0,0,0,0.8)';
+    debugDiv.style.color = 'white';
+    debugDiv.style.padding = '10px';
+    debugDiv.style.fontSize = '12px';
+    debugDiv.style.zIndex = '10000';
+    debugDiv.style.maxWidth = '300px';
+    debugDiv.innerHTML = `
+        <strong>DEBUG MODE ACTIVE</strong><br>
+        <div id="debugClicks">Clicks: 0</div>
+        <div id="debugPlacement">Placement Mode: false</div>
+        <div id="debugMonsters">Monsters: 0</div>
+        <div id="debugEnemies">Enemies: 0</div>
+        <div id="debugLastEvent">Last Event: None</div>
+        <button onclick="clearDebugLog()">Clear Log</button>
+        <button onclick="forcePlaceTest()">Force Place</button>
+        <div id="debugLog" style="margin-top:10px; max-height:200px; overflow:auto; font-size:10px;"></div>
+    `;
+    document.body.appendChild(debugDiv);
+
+    // Override console.log to also show in debug div
+    const originalLog = console.log;
+    console.log = function(...args) {
+        originalLog.apply(console, args);
+        const logDiv = document.getElementById('debugLog');
+        if (logDiv) {
+            const message = args.join(' ');
+            logDiv.innerHTML += message + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+    };
+
+    // Make debug functions global
+    window.clearDebugLog = function() {
+        document.getElementById('debugLog').innerHTML = '';
+    };
+
+    window.forcePlaceTest = function() {
+        if (window.gameEngine && window.gameEngine.forcePlaceMonster) {
+            window.gameEngine.forcePlaceMonster(200, 300, 'GEM');
+        } else {
+            alert('Game not ready or forcePlace not available');
+        }
+    };
+
+    // Update debug info periodically
+    setInterval(() => {
+        if (window.gameEngine) {
+            const ge = window.gameEngine;
+            document.getElementById('debugPlacement').textContent = `Placement Mode: ${ge.uiSystem ? ge.uiSystem.placementMode : 'unknown'}`;
+            document.getElementById('debugMonsters').textContent = `Monsters: ${ge.entities ? Array.from(ge.entities.values()).filter(e => e.hasTag && e.hasTag('monster')).length : 0}`;
+            document.getElementById('debugEnemies').textContent = `Enemies: ${ge.entities ? Array.from(ge.entities.values()).filter(e => e.hasTag && e.hasTag('enemy')).length : 0}`;
+        }
+    }, 1000);
 }
 
 function showGameInstructions() {

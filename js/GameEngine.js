@@ -405,6 +405,14 @@ class GameEngine {
 
     handleMouseDown(e) {
         console.log('🖱️ handleMouseDown called:', e.clientX, e.clientY);
+
+        // Update debug counter
+        this.debugClickCount++;
+        const debugClicks = document.getElementById('debugClicks');
+        if (debugClicks) {
+            debugClicks.textContent = `Clicks: ${this.debugClickCount}`;
+        }
+
         const rect = this.canvas.getBoundingClientRect();
         // Scale coordinates for responsive canvas
         const scaleX = this.canvas.width / rect.width;
@@ -413,6 +421,12 @@ class GameEngine {
         this.input.mouse.y = (e.clientY - rect.top) * scaleY;
         this.input.mouse.pressed = true;
         console.log('🖱️ Scaled mouse coordinates:', this.input.mouse.x, this.input.mouse.y, 'scale:', scaleX, scaleY);
+
+        // Update debug last event
+        const debugLastEvent = document.getElementById('debugLastEvent');
+        if (debugLastEvent) {
+            debugLastEvent.textContent = `Last Event: Click at (${this.input.mouse.x.toFixed(0)}, ${this.input.mouse.y.toFixed(0)})`;
+        }
 
         this.handleInput(this.input.mouse.x, this.input.mouse.y, true);
     }
@@ -1256,6 +1270,9 @@ window.addEventListener('error', (event) => {
   console.error('Unhandled error:', event.message, event.filename, event.lineno);
   // Optional: Send to server or alert
 });
+
+// Debug tracking
+this.debugClickCount = 0;
 
 // Debug force place function - call from console: window.gameEngine.forcePlaceMonster(200, 300, 'GEM')
 if (new URLSearchParams(window.location.search).has('debug')) {
