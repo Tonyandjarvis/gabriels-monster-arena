@@ -128,12 +128,14 @@ class GameEngine {
         const isMobile = window.innerWidth <= 768;
         const targetWidth = isMobile ? window.innerWidth : 800;
         const targetHeight = isMobile ? window.innerHeight : 600;
-        
+
         this.canvas.width = targetWidth;
         this.canvas.height = targetHeight;
         this.canvas.style.width = targetWidth + 'px';
         this.canvas.style.height = targetHeight + 'px';
-        
+
+        console.log(`Canvas resized to ${targetWidth}x${targetHeight}, rect:`, this.canvas.getBoundingClientRect());
+
         // Update UI system if it exists
         if (this.uiSystem) {
             this.uiSystem.updateCanvasSize();
@@ -402,11 +404,13 @@ class GameEngine {
     }
 
     handleMouseDown(e) {
+        console.log('🖱️ handleMouseDown called:', e.clientX, e.clientY);
         const rect = this.canvas.getBoundingClientRect();
         this.input.mouse.x = e.clientX - rect.left;
         this.input.mouse.y = e.clientY - rect.top;
         this.input.mouse.pressed = true;
-        
+        console.log('🖱️ Mouse coordinates:', this.input.mouse.x, this.input.mouse.y);
+
         this.handleInput(this.input.mouse.x, this.input.mouse.y, true);
     }
 
