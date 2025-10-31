@@ -490,23 +490,27 @@ class UISystem extends System {
 
     handleTouch(x, y) {
         console.log(`🖐️ UISystem.handleTouch called at (${x}, ${y})`);
+
         // Check monster selection buttons
         for (let button of this.buttons) {
             if (button.isPointInside(x, y)) {
+                console.log(`🖐️ Button clicked: ${button.monsterType || 'unknown'}`);
                 button.onClick();
                 return true;
             }
         }
-        
+
         // Check cancel button if in placement mode
         if (this.placementMode && this.cancelButton) {
             if (this.cancelButton.isPointInside(x, y)) {
+                console.log('🖐️ Cancel button clicked');
                 this.exitPlacementMode();
                 return true;
             }
         }
-        
-        return false; // Log if not handled
+
+        console.log('🖐️ No UI element hit - allowing placement logic');
+        return false; // Not handled by UI, allow placement logic
     }
 
     updateGameStats(stats) {

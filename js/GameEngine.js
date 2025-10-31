@@ -406,10 +406,13 @@ class GameEngine {
     handleMouseDown(e) {
         console.log('🖱️ handleMouseDown called:', e.clientX, e.clientY);
         const rect = this.canvas.getBoundingClientRect();
-        this.input.mouse.x = e.clientX - rect.left;
-        this.input.mouse.y = e.clientY - rect.top;
+        // Scale coordinates for responsive canvas
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        this.input.mouse.x = (e.clientX - rect.left) * scaleX;
+        this.input.mouse.y = (e.clientY - rect.top) * scaleY;
         this.input.mouse.pressed = true;
-        console.log('🖱️ Mouse coordinates:', this.input.mouse.x, this.input.mouse.y);
+        console.log('🖱️ Scaled mouse coordinates:', this.input.mouse.x, this.input.mouse.y, 'scale:', scaleX, scaleY);
 
         this.handleInput(this.input.mouse.x, this.input.mouse.y, true);
     }
@@ -1253,3 +1256,20 @@ window.addEventListener('error', (event) => {
   console.error('Unhandled error:', event.message, event.filename, event.lineno);
   // Optional: Send to server or alert
 });
+
+// Debug force place function - call from console: window.gameEngine.forcePlaceMonster(200, 300, 'GEM')
+if (new URLSearchParams(window.location.search).has('debug')) {
+  window.gameEngine.forcePlaceMonster = function(x, y, monsterType) {
+    console.log(`🔧 Force placing monster at (${x}, ${y})`);
+    const monster = this.placementSystem.placeMonster(x, y, monsterType);
+    if (monster) {
+      console.log('✅ Force placement successful');
+      this.addEntity(monster);
+      this.placementSystem.exitPlacementMode();
+      this.uiSystem.exitPlacementMode();
+    } else {
+      console.log('❌ Force placement failed');
+    }
+    return monster;
+  };
+}

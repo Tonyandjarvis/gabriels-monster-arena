@@ -144,9 +144,18 @@ function initializeGame() {
         
         // Start the game
         gameEngine.start();
-        
+
+        // Hide loading screen to prevent click blocking
+        const loadingScreen = document.getElementById('loadingScreen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+            loadingScreen.style.pointerEvents = 'none';
+            loadingScreen.style.zIndex = '-1';
+            console.log('Loading screen hidden and disabled');
+        }
+
         console.log('Game started successfully!');
-        
+
         // Show game instructions
         showGameInstructions();
         
