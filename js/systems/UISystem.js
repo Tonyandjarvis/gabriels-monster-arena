@@ -534,15 +534,20 @@ class UISystem extends System {
     }
 
     spendCurrency(amount) {
+        console.log(`💰 Attempting to spend ${amount} currency, current: ${this.gameStats.currency}`);
         if (this.gameStats.currency >= amount) {
             this.gameStats.currency -= amount;
+            console.log(`✅ Spent ${amount} currency, remaining: ${this.gameStats.currency}`);
             return true;
         }
+        console.log(`❌ Insufficient currency: ${this.gameStats.currency} < ${amount}`);
         return false;
     }
 
     addCurrency(amount) {
+        console.log(`💰 Adding ${amount} currency, current: ${this.gameStats.currency}`);
         this.gameStats.currency += amount;
+        console.log(`✅ Currency now: ${this.gameStats.currency}`);
         this.updateGameStats(this.gameStats);
     }
 

@@ -65,7 +65,7 @@ class CombatSystem extends System {
     }
 
     update(deltaTime) {
-        console.log(`🔫 CombatSystem.update() called with deltaTime: ${deltaTime}`);
+        console.log(`🔫 CombatSystem.update() called with deltaTime: ${deltaTime}, entities: ${this.entities.size}`);
 
         // Update monsters
         this.updateMonsters(deltaTime);
@@ -75,7 +75,7 @@ class CombatSystem extends System {
 
         // Update damage numbers
         this.updateDamageNumbers(deltaTime);
-        
+
         // Process combat events
         this.processCombatEvents();
         

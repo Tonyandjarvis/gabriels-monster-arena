@@ -668,6 +668,8 @@ class GameEngine {
                 .filter(system => system.enabled)
                 .sort((a, b) => a.priority - b.priority);
 
+            console.log(`🎮 Updating ${sortedSystems.length} enabled systems: ${sortedSystems.map(s => s.constructor.name).join(', ')}`);
+
             for (const system of sortedSystems) {
                 try {
                     system.update(deltaTime);
