@@ -163,12 +163,23 @@ function initializeGame() {
         if (new URLSearchParams(window.location.search).has('debug')) {
             // Delay debug overlay creation to ensure DOM is fully ready
             setTimeout(() => {
-                try {
-                    addVisualDebugInfo();
-                } catch (e) {
-                    console.error('Failed to initialize debug overlay:', e);
+                if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                    try {
+                        addVisualDebugInfo();
+                        console.log('Debug overlay initialized successfully');
+                    } catch (e) {
+                        console.error('Failed to initialize debug overlay:', e);
+                        // Fallback: at least enable force place
+                        window.forcePlaceTest = function() {
+                            if (window.gameEngine && window.gameEngine.forcePlaceMonster) {
+                                window.gameEngine.forcePlaceMonster(200, 300, 'GEM');
+                            }
+                        };
+                    }
+                } else {
+                    console.warn('DOM not ready for debug overlay');
                 }
-            }, 100);
+            }, 500); // Longer delay
         }
         
     } catch (error) {

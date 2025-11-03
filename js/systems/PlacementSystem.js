@@ -56,16 +56,37 @@ class PlacementSystem extends System {
     placeMonster(x, y, monsterType) {
         const gridPos = this.worldToGrid(x, y);
         const key = `${gridPos.x},${gridPos.y}`;
-        console.log(`Attempting to place monster at world (${x}, ${y}) -> grid (${gridPos.x}, ${gridPos.y})`);
+        console.log(`🎯 Attempting to place monster at world (${x}, ${y}) -> grid (${gridPos.x}, ${gridPos.y})`);
 
-        if (this.isValidPlacement(gridPos.x, gridPos.y)) {
-            const monster = this.createMonster(gridPos.x, gridPos.y, monsterType);
-            this.grid.set(key, monster);
-            console.log(`Monster placed successfully at grid (${gridPos.x}, ${gridPos.y})`);
-            return monster;
+        // Check bounds first
+        if (!this.isInBounds(gridPos.x, gridPos.y)) {
+            console.log(`❌ Placement failed: out of bounds (${gridPos.x}, ${gridPos.y})`);
+            return null;
         }
-        console.log(`Monster placement failed at grid (${gridPos.x}, ${gridPos.y})`);
-        return null;
+
+        // Check if occupied
+        if (this.isOccupied(gridPos.x, gridPos.y)) {
+            console.log(`❌ Placement failed: position occupied (${gridPos.x}, ${gridPos.y})`);
+            return null;
+        }
+
+        // Check path with relaxed tolerance
+        if (this.isOnPathStrict(gridPos.x, gridPos.y)) {
+            console.log(`❌ Placement failed: too close to path (${gridPos.x}, ${gridPos.y})`);
+            return null;
+        }
+
+        // Check obstacles
+        if (this.isObstacle(gridPos.x, gridPos.y)) {
+            console.log(`❌ Placement failed: obstacle at (${gridPos.x}, ${gridPos.y})`);
+            return null;
+        }
+
+        console.log(`✅ Placement valid at grid (${gridPos.x}, ${gridPos.y}) - creating monster`);
+        const monster = this.createMonster(gridPos.x, gridPos.y, monsterType);
+        this.grid.set(key, monster);
+        console.log(`🎉 Monster placed successfully at grid (${gridPos.x}, ${gridPos.y})`);
+        return monster;
     }
 
     worldToGrid(x, y) {

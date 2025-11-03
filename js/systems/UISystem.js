@@ -217,29 +217,36 @@ class UISystem extends System {
     }
 
     selectMonster(monsterType) {
+        console.log(`🎯 selectMonster called with ${monsterType}, can afford: ${this.canAffordMonster(monsterType)}`);
+
+        if (!this.canAffordMonster(monsterType)) {
+            console.log(`❌ Cannot afford ${monsterType}`);
+            return;
+        }
+
         this.selectedMonster = monsterType;
         this.placementMode = true;
-        
+
         // Create cancel button
         this.cancelButton = new CancelButton(
-            this.canvas.width - 120, 
-            this.canvas.height - 60, 
-            100, 
-            40, 
+            this.canvas.width - 120,
+            this.canvas.height - 60,
+            100,
+            40,
             () => this.exitPlacementMode()
         );
-        
+
         // Update button states
         this.buttons.forEach(button => {
             button.selected = button.monsterType === monsterType;
         });
-        
+
         // Notify tutorial system
         if (this.gameEngine && this.gameEngine.tutorialSystem) {
             this.gameEngine.tutorialSystem.completeAction('click_monster');
         }
-        
-        console.log(`🎯 Entered placement mode for ${monsterType}`);
+
+        console.log(`🎯 Successfully entered placement mode for ${monsterType}`);
     }
 
     exitPlacementMode() {

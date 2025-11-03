@@ -404,7 +404,24 @@ class GameEngine {
     }
 
     handleMouseDown(e) {
-        console.log('🖱️ handleMouseDown called:', e.clientX, e.clientY);
+        console.log('🖱️ handleMouseDown called:', e.clientX, e.clientY, 'button:', e.button, 'type:', e.type);
+
+        // Prevent default for right-click menu
+        if (e.button === 2) {
+            e.preventDefault();
+            if (this.uiSystem.placementMode) {
+                console.log('🎯 Right-click detected - canceling placement mode');
+                this.uiSystem.exitPlacementMode();
+                this.placementSystem.exitPlacementMode();
+            }
+            return;
+        }
+
+        // Only process left-clicks (button 0)
+        if (e.button !== 0) {
+            console.log('Ignoring non-left-click button:', e.button);
+            return;
+        }
 
         // Update debug counter
         this.debugClickCount++;
@@ -414,6 +431,9 @@ class GameEngine {
         }
 
         const rect = this.canvas.getBoundingClientRect();
+        console.log('Canvas rect:', rect.left, rect.top, rect.width, rect.height);
+        console.log('Canvas actual size:', this.canvas.width, this.canvas.height);
+
         // Scale coordinates for responsive canvas
         const scaleX = this.canvas.width / rect.width;
         const scaleY = this.canvas.height / rect.height;
@@ -428,6 +448,8 @@ class GameEngine {
             debugLastEvent.textContent = `Last Event: Click at (${this.input.mouse.x.toFixed(0)}, ${this.input.mouse.y.toFixed(0)})`;
         }
 
+        // CRITICAL: Log before calling handleInput
+        console.log('About to call handleInput with placement mode:', this.uiSystem ? this.uiSystem.placementMode : 'no UI system');
         this.handleInput(this.input.mouse.x, this.input.mouse.y, true);
     }
 
@@ -521,18 +543,13 @@ class GameEngine {
         }
         
         // Handle UI interactions
-        if (this.uiSystem.handleTouch(x, y)) {
+        const uiHandled = this.uiSystem.handleTouch(x, y);
+        console.log(`UI handleTouch result: ${uiHandled}, placementMode: ${this.uiSystem.placementMode}`);
+        if (uiHandled) {
+            console.log('UI system handled the click');
             return;
         }
-        
-        // Handle right-click to cancel placement mode
-        if (this.uiSystem.placementMode) {
-            console.log('🎯 Right-click detected - canceling placement mode');
-            this.uiSystem.exitPlacementMode();
-            this.placementSystem.exitPlacementMode();
-            return;
-        }
-        
+
         // Handle monster removal
         if (this.uiSystem.isRemovalMode()) {
             if (this.gameState !== 'GAMEPLAY') {
@@ -567,13 +584,14 @@ class GameEngine {
 
             const cost = MonsterComponent.TYPES[monsterType].stats.cost;
 
-            console.log(`Attempting to place monster at (${x}, ${y}), cost: ${cost}, can afford: ${this.uiSystem.canAffordMonster(monsterType)}`);
+            console.log(`🎯 Attempting to place monster at (${x}, ${y}), cost: ${cost}, can afford: ${this.uiSystem.canAffordMonster(monsterType)}`);
 
             try {
                 const monster = this.placementSystem.placeMonster(x, y, monsterType);
+                console.log('Placement system result:', monster ? 'SUCCESS' : 'FAILED');
+
                 if (monster) {
-                    // successful placement
-                    console.log('Monster placed successfully!', monster);
+                    console.log('✅ Monster entity created:', monster.id, 'at position:', monster.getComponent('PositionComponent'));
 
                     // Spend currency and check if successful
                     if (this.uiSystem.spendCurrency(cost)) {
