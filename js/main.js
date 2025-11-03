@@ -156,13 +156,20 @@ function initializeGame() {
 
         console.log('Game started successfully!');
 
-        // Add visual debug info if in debug mode
-        if (new URLSearchParams(window.location.search).has('debug')) {
-            addVisualDebugInfo();
-        }
-
         // Show game instructions
         showGameInstructions();
+
+        // Add visual debug info if in debug mode (after everything else is ready)
+        if (new URLSearchParams(window.location.search).has('debug')) {
+            // Delay debug overlay creation to ensure DOM is fully ready
+            setTimeout(() => {
+                try {
+                    addVisualDebugInfo();
+                } catch (e) {
+                    console.error('Failed to initialize debug overlay:', e);
+                }
+            }, 100);
+        }
         
     } catch (error) {
         console.error('Failed to initialize game:', error);
